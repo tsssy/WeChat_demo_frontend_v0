@@ -4,12 +4,44 @@
       <!-- 加载页面骨架 -->
       <h2>Finding your first match</h2>
       <div class="loading-spinner"></div>
-      <ul>
-        <li>Analyzing your personality</li>
-        <li>Confirmed that you are an adventurous person</li>
-        <li>Considering about your past history of being hurt by boys in teenage years. Finding someone who values relationship and has been in your shoes before.</li>
+      <ul class="thinking-process">
+        <li 
+          v-for="(message, index) in loadingMessages" 
+          :key="index"
+          :class="{ 'active': currentActiveIndex >= index, 'completed': currentActiveIndex > index }"
+        >
+          {{ message }}
+          <span v-if="currentActiveIndex === index" class="typing-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </span>
+        </li>
+        <!-- 重试消息 -->
+        <li 
+          v-if="isRetrying" 
+          class="retry-message active"
+        >
+          {{ getRetryMessage() }}
+          <span class="typing-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </span>
+        </li>
+        <li 
+          v-if="showFinalMessage" 
+          class="final-message active"
+        >
+          We found you a match, redirecting now.
+          <span class="typing-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </span>
+        </li>
       </ul>
-      <p>Finding candidates ....</p>
+      <p v-if="!showFinalMessage">Finding candidates ....</p>
     </div>
   </div>
 </template>
@@ -19,31 +51,279 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user.js'
 import eventBus from '../utils/eventBus.js'
-import { debugLog } from '../utils/debug.js'
+import { debugLog, devHelpers } from '../utils/debug.js'
+import ManualMatchClient from '../wsclients/ManualMatchClient.js'
 
 const router = useRouter()
 const userStore = useUserStore()
 
+// WebSocket客户端实例
+const matchClient = ref(null)
+
+// 动画状态
+const currentActiveIndex = ref(-1)
+const showFinalMessage = ref(false)
+const matchReceived = ref(false)
+const pageStartTime = ref(null)
+
+// 重试逻辑状态
+const retryCount = ref(0)
+const maxRetries = ref(5)
+const retryDelay = ref(3000) // 3秒重试间隔
+const isRetrying = ref(false)
+
 // 加载状态信息
 const loadingMessages = ref([
   'Analyzing your personality',
-  'Confirmed that you are an adventurous person',
+  'Confirmed that you are an adventurous person', 
   'Considering about your past history of being hurt by boys in teenage years. Finding someone who values relationship and has been in your shoes before.'
 ])
 
-// 监听匹配成功事件，自动跳转到WhyHim页面
-function handleMatchSuccess(msg) {
-  debugLog.event('收到匹配成功事件:', msg)
-  // 这里可以根据msg内容判断是否匹配成功
-  // 假设msg.type === 'match_success'表示成功
-  if (msg && msg.type === 'match_success') {
-    debugLog.route('跳转到 WhyHim 页面')
-    router.push('/why-him')
+// 添加重试相关的消息
+const getRetryMessage = () => {
+  if (isRetrying.value) {
+    return `Retrying match search... (${retryCount.value}/${maxRetries.value})`
+  }
+  return null
+}
+
+// WebSocket配置
+const getWebSocketUrl = () => {
+  // 始终使用生产环境URL
+  return 'wss://lovetapoversea.xyz:4433/ws/match'
+}
+
+// 开始思考过程动画
+const startThinkingAnimation = () => {
+  const animateNextStep = (index) => {
+    if (index < loadingMessages.value.length) {
+      currentActiveIndex.value = index
+      debugLog.log(`开始思考步骤 ${index + 1}: ${loadingMessages.value[index]}`)
+      
+      // 每个步骤显示6-10秒随机时间
+      const stepDuration = 6000 + Math.random() * 4000
+      
+      setTimeout(() => {
+        animateNextStep(index + 1)
+      }, stepDuration)
+    } else {
+      debugLog.log('思考过程完成，等待30秒计时器')
+      // 所有思考步骤完成后，标记为已完成
+      currentActiveIndex.value = loadingMessages.value.length
+    }
+  }
+  
+  // 延迟1秒开始第一步
+  setTimeout(() => {
+    animateNextStep(0)
+  }, 1000)
+}
+
+// 重试匹配请求
+const retryMatch = () => {
+  if (retryCount.value >= maxRetries.value) {
+    debugLog.error('已达到最大重试次数，停止重试')
+    // 可以在这里显示错误信息给用户
+    return
+  }
+  
+  retryCount.value++
+  isRetrying.value = true
+  
+  debugLog.log(`开始第 ${retryCount.value} 次重试匹配请求...`)
+  
+  setTimeout(() => {
+    if (matchClient.value && matchClient.value.isReady()) {
+      matchClient.value.start_match()
+      debugLog.websocket(`第 ${retryCount.value} 次匹配请求已发送`)
+      isRetrying.value = false
+    } else {
+      debugLog.error('WebSocket连接未就绪，无法重试')
+      isRetrying.value = false
+    }
+  }, retryDelay.value)
+}
+
+// 检查是否可以导航（30秒已过且收到匹配）
+const checkAndNavigate = () => {
+  const now = Date.now()
+  const elapsed = now - pageStartTime.value
+  const minimumWait = 30000 // 30秒
+  
+  debugLog.log(`检查导航条件: 已等待 ${elapsed}ms, 匹配已收到: ${matchReceived.value}`)
+  
+  if (elapsed >= minimumWait && matchReceived.value) {
+    debugLog.log('满足导航条件，显示最终消息')
+    showFinalMessage.value = true
+    
+    // 显示最终消息3秒后跳转
+    setTimeout(() => {
+      debugLog.route('30秒等待完成，匹配完成，跳转到WhyHim页面')
+      router.push('/why-him')
+    }, 3000)
+  } else if (matchReceived.value) {
+    // 如果匹配已收到但30秒未到，继续等待
+    const remainingTime = minimumWait - elapsed
+    debugLog.log(`匹配已收到，但需再等待 ${remainingTime}ms`)
+    setTimeout(checkAndNavigate, 1000)
   }
 }
 
+// 初始化匹配WebSocket连接
+const initializeMatchWebSocket = () => {
+  if (!userStore.userId) {
+    debugLog.error('用户未初始化，无法建立匹配连接')
+    return
+  }
+
+  try {
+    devHelpers.time('匹配WebSocket初始化')
+    
+    const wsUrl = getWebSocketUrl()
+    debugLog.websocket('初始化匹配WebSocket:', wsUrl)
+    debugLog.websocket('用户ID:', userStore.userId)
+    
+    matchClient.value = new ManualMatchClient(wsUrl, userStore.userId)
+    matchClient.value.connect()
+    
+    // 连接成功后自动开始匹配
+    setTimeout(() => {
+      if (matchClient.value && matchClient.value.isReady()) {
+        matchClient.value.start_match()
+        debugLog.websocket('匹配请求已发送')
+      }
+    }, 1000)
+    
+    devHelpers.timeEnd('匹配WebSocket初始化')
+    
+  } catch (error) {
+    debugLog.error('匹配WebSocket初始化失败:', error)
+  }
+}
+
+// 处理匹配成功事件
+function handleMatchSuccess(matchData) {
+  debugLog.log('=== 匹配成功 ===')
+  debugLog.log('完整匹配数据:', matchData)
+  debugLog.log('匹配ID:', matchData.match_id)
+  debugLog.log('目标用户ID:', matchData.matched_user_id)
+  debugLog.log('匹配分数:', matchData.match_score)
+  debugLog.log('给自己的理由:', matchData.reason_for_self)
+  debugLog.log('给对方的理由:', matchData.reason_for_target)
+  debugLog.log('==================')
+  
+  // 存储匹配信息到用户store
+  userStore.setCurrentMatch(matchData)
+  
+  // 标记匹配已收到
+  matchReceived.value = true
+  debugLog.log('匹配结果已收到并存储，开始检查30秒等待条件')
+  
+  // 检查是否可以导航
+  checkAndNavigate()
+}
+
+// 处理匹配错误事件
+function handleMatchError(errorData) {
+  debugLog.error('=== 匹配失败 ===')
+  debugLog.error('错误信息:', errorData)
+  debugLog.error('==================')
+  
+  // 如果还没收到有效匹配且未达到最大重试次数，则重试
+  if (!matchReceived.value && retryCount.value < maxRetries.value) {
+    debugLog.log('检测到匹配错误，准备重试...')
+    retryMatch()
+  } else if (retryCount.value >= maxRetries.value) {
+    debugLog.error('已达到最大重试次数，匹配失败')
+    // 这里可以显示用户友好的错误信息
+  }
+}
+
+// 处理所有匹配消息（用于完整日志记录）
+function handleMatchMessage(data) {
+  debugLog.log('=== 收到匹配消息 ===')
+  debugLog.log('消息类型:', data.type)
+  debugLog.log('完整数据:', data)
+  
+  // 根据消息类型进行不同的日志记录
+  switch (data.type) {
+    case 'match_info':
+      debugLog.log('匹配信息详情:')
+      debugLog.log('- 匹配ID:', data.match_id)
+      debugLog.log('- 自己的ID:', data.self_user_id)
+      debugLog.log('- 匹配用户ID:', data.matched_user_id)
+      debugLog.log('- 匹配得分:', data.match_score)
+      debugLog.log('- 匹配原因(给自己):', data.reason_of_match_given_to_self_user)
+      debugLog.log('- 匹配原因(给对方):', data.reason_of_match_given_to_matched_user)
+      break
+      
+    case 'match_error':
+      debugLog.log('匹配错误详情:')
+      debugLog.log('- 错误消息:', data.message)
+      debugLog.log('- 重试次数:', retryCount.value)
+      debugLog.log('- 最大重试次数:', maxRetries.value)
+      break
+      
+    default:
+      if (data.status === 'authenticated') {
+        debugLog.log('认证成功详情:')
+        debugLog.log('- 用户ID:', data.user_id)
+      } else {
+        debugLog.log('其他类型消息:', data)
+      }
+  }
+  debugLog.log('==================')
+}
+
+// 处理连接状态变化
+function handleMatchOpen(data) {
+  debugLog.log('=== 匹配WebSocket连接已建立 ===')
+  debugLog.log('连接数据:', data)
+  debugLog.log('==================')
+}
+
+function handleMatchClose(data) {
+  debugLog.log('=== 匹配WebSocket连接已关闭 ===')
+  debugLog.log('关闭数据:', data)
+  debugLog.log('==================')
+}
+
+function handleMatchAuthenticated(data) {
+  debugLog.log('=== 匹配客户端认证成功 ===')
+  debugLog.log('认证数据:', data)
+  debugLog.log('==================')
+}
+
 onMounted(() => {
-  eventBus.on('match:message', handleMatchSuccess)
+  debugLog.log('Loading页面挂载开始')
+  
+  // 记录页面开始时间
+  pageStartTime.value = Date.now()
+  debugLog.log('页面开始时间已记录，开始30秒计时器')
+  
+  // 启动思考过程动画
+  startThinkingAnimation()
+  
+  // 等待用户初始化完成后再建立WebSocket连接
+  const checkUserAndConnect = () => {
+    if (userStore.hasUser && userStore.userId) {
+      debugLog.log('用户已就绪，开始建立匹配连接')
+      initializeMatchWebSocket()
+    } else {
+      debugLog.log('等待用户初始化...')
+      setTimeout(checkUserAndConnect, 500)
+    }
+  }
+  
+  checkUserAndConnect()
+  
+  // 设置事件监听器
+  eventBus.on('match:success', handleMatchSuccess)
+  eventBus.on('match:error', handleMatchError)
+  eventBus.on('match:message', handleMatchMessage)
+  eventBus.on('match:open', handleMatchOpen)
+  eventBus.on('match:close', handleMatchClose)
+  eventBus.on('match:authenticated', handleMatchAuthenticated)
   
   // 显示当前用户信息 (开发调试)
   debugLog.user('Loading页面挂载 - 当前用户ID:', userStore.userId)
@@ -57,8 +337,24 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  eventBus.off('match:message', handleMatchSuccess)
-  debugLog.log('Loading页面卸载')
+  debugLog.log('Loading页面卸载开始')
+  
+  // 清理事件监听器
+  eventBus.off('match:success', handleMatchSuccess)
+  eventBus.off('match:error', handleMatchError)
+  eventBus.off('match:message', handleMatchMessage)
+  eventBus.off('match:open', handleMatchOpen)
+  eventBus.off('match:close', handleMatchClose)
+  eventBus.off('match:authenticated', handleMatchAuthenticated)
+  
+  // 关闭WebSocket连接
+  if (matchClient.value) {
+    matchClient.value.disconnect()
+    matchClient.value = null
+    debugLog.websocket('匹配WebSocket连接已清理')
+  }
+  
+  debugLog.log('Loading页面卸载完成')
 })
 </script>
 
@@ -128,6 +424,86 @@ onUnmounted(() => {
   margin-bottom: 0.4rem;
   line-height: 1.3;
   font-size: 0.9rem;
+  opacity: 0.3;
+  transition: opacity 0.5s ease-in;
+}
+
+.loading-page li.active {
+  opacity: 1;
+}
+
+.loading-page li.completed {
+  opacity: 0.7;
+  color: #666;
+}
+
+.loading-page .retry-message {
+  color: #ff9500;
+  font-weight: 500;
+  font-size: 0.95rem;
+  margin-top: 0.3rem;
+}
+
+.loading-page .final-message {
+  color: #ff6b81;
+  font-weight: bold;
+  font-size: 1rem;
+  margin-top: 0.5rem;
+}
+
+.thinking-process {
+  width: 100%;
+  text-align: left;
+  padding: 0 1rem;
+  margin: 0.8rem 0;
+  flex: 1;
+  overflow-y: auto;
+  max-height: 40vh;
+}
+
+@media (min-width: 768px) {
+  .thinking-process {
+    max-width: 320px;
+    max-height: 30vh;
+  }
+}
+
+.typing-dots {
+  display: inline-block;
+  margin-left: 0.5rem;
+}
+
+.typing-dots .dot {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: currentColor;
+  border-radius: 50%;
+  margin: 0 1px;
+  animation: typing 1.5s infinite;
+}
+
+.typing-dots .dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.typing-dots .dot:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.typing-dots .dot:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+@keyframes typing {
+  0%, 60%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
 }
 
 .loading-page p {

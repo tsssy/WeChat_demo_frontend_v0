@@ -5,183 +5,181 @@ import { debugLog } from '../utils/debug.js'
  * This file contains the data structures for all API communications
  */
 
-// ============================================================================
-// USER SERVICE SCHEMES
-// ============================================================================
+// ===============================
+// Miracle Demo API Schemes
+// ===============================
+
+// -------------------------------
+// 用户管理 UserManagement
+// -------------------------------
 
 /**
- * Create Female User
+ * 创建新用户请求体
  */
-export class CreateFemaleUserRequest {
-  constructor(telegram_id, telegram_user_name, mode = null) {
-    this.telegram_id = telegram_id
+export class CreateNewUserRequest {
+  /**
+   * @param {string} telegram_user_name 用户的 Telegram 用户名
+   * @param {number} telegram_user_id 用户的 Telegram ID
+   * @param {number} gender 用户性别 1/2/3
+   */
+  constructor(telegram_user_name, telegram_user_id, gender) {
     this.telegram_user_name = telegram_user_name
-    this.mode = mode // Optional: 1 or 3
-    debugLog.log('📝 CreateFemaleUserRequest created:', this)
-  }
-
-  validate() {
-    if (!this.telegram_id || typeof this.telegram_id !== 'number') {
-      throw new Error('telegram_id must be a valid integer')
-    }
-    if (!this.telegram_user_name || typeof this.telegram_user_name !== 'string') {
-      throw new Error('telegram_user_name must be a valid string')
-    }
-    if (this.mode !== null && ![1, 2, 3].includes(this.mode)) {
-      throw new Error('mode must be either 1 or 3')
-    }
-    return true
-  }
-}
-
-export class CreateFemaleUserResponse {
-  constructor(success) {
-    this.success = success
-    debugLog.log('📝 CreateFemaleUserResponse created:', this)
-  }
-
-  static fromApiResponse(data) {
-    return new CreateFemaleUserResponse(data.success)
-  }
-}
-
-/**
- * Create Male User
- */
-export class CreateMaleUserRequest {
-  constructor(telegram_id, telegram_user_name, mode = null) {
-    this.telegram_id = telegram_id
-    this.telegram_user_name = telegram_user_name
-    this.mode = mode // Optional: 1 or 3
-    debugLog.log('📝 CreateMaleUserRequest created:', this)
-  }
-
-  validate() {
-    if (!this.telegram_id || typeof this.telegram_id !== 'number') {
-      throw new Error('telegram_id must be a valid integer')
-    }
-    if (!this.telegram_user_name || typeof this.telegram_user_name !== 'string') {
-      throw new Error('telegram_user_name must be a valid string')
-    }
-    if (this.mode !== null && ![1, 2, 3].includes(this.mode)) {
-      throw new Error('mode must be either 1 or 3')
-    }
-    return true
-  }
-}
-
-export class CreateMaleUserResponse {
-  constructor(success) {
-    this.success = success
-    debugLog.log('📝 CreateMaleUserResponse created:', this)
-  }
-
-  static fromApiResponse(data) {
-    return new CreateMaleUserResponse(data.success)
-  }
-}
-
-/**
- * Get User from Telegram Session
- */
-export class GetTelegramSessionGenderRequest {
-  constructor(telegram_id) {
-    this.telegram_id = telegram_id
-    debugLog.log('📝 GetTelegramSessionGenderRequest created:', this)
-  }
-
-  validate() {
-    if (!this.telegram_id || typeof this.telegram_id !== 'number') {
-      throw new Error('telegram_id must be a valid integer')
-    }
-    return true
-  }
-}
-
-export class GetTelegramSessionGenderResponse {
-  constructor(gender) {
-    this.gender = gender // 1 or 3
-    debugLog.log('📝 GetTelegramSessionGenderResponse created:', this)
-  }
-
-  static fromApiResponse(data) {
-    return new GetTelegramSessionGenderResponse(data.gender)
-  }
-}
-
-/**
- * Get User Exist
- */
-export class GetUserExistRequest {
-  constructor(telegram_id) {
-    this.telegram_id = telegram_id
-    debugLog.log('📝 GetUserExistRequest created:', this)
-  }
-
-  validate() {
-    if (!this.telegram_id || typeof this.telegram_id !== 'number') {
-      throw new Error('telegram_id must be a valid integer')
-    }
-    return true
-  }
-}
-
-export class GetUserExistResponse {
-  constructor(success) {
-    this.success = success
-    debugLog.log('📝 GetUserExistResponse created:', this)
-  }
-
-  static fromApiResponse(data) {
-    return new GetUserExistResponse(data.success)
-  }
-}
-
-/**
- * Get User Info
- */
-export class GetUserInfoRequest {
-  constructor(telegram_id) {
-    this.telegram_id = telegram_id
-    debugLog.log('📝 GetUserInfoRequest created:', this)
-  }
-
-  validate() {
-    if (!this.telegram_id || typeof this.telegram_id !== 'number') {
-      throw new Error('telegram_id must be a valid integer')
-    }
-    return true
-  }
-}
-
-export class GetUserInfoResponse {
-  constructor(gender, question_list, answer_list, paired_user, profile_photo, mode, profile, model_id, saved_list_question, saved_list_answer) {
+    this.telegram_user_id = telegram_user_id
     this.gender = gender
-    this.question_list = question_list
-    this.answer_list = answer_list
-    this.paired_user = paired_user
-    this.profile_photo = profile_photo
-    this.mode = mode
-    this.profile = profile
-    this.model_id = model_id
-    this.saved_list_question = saved_list_question
-    this.saved_list_answer = saved_list_answer
-    debugLog.log('📝 GetUserInfoResponse created:', this)
   }
+}
 
-  static fromApiResponse(data) {
-    return new GetUserInfoResponse(
-      data.gender,
-      data.question_list,
-      data.answer_list,
-      data.paired_user,
-      data.profile_photo,
-      data.mode,
-      data.profile,
-      data.model_id,
-      data.saved_list_question,
-      data.saved_list_answer
-    )
+/**
+ * 创建新用户响应体
+ */
+export class CreateNewUserResponse {
+  /**
+   * @param {boolean} success 是否创建成功
+   * @param {number} user_id 新用户的唯一ID
+   */
+  constructor(success, user_id) {
+    this.success = success
+    this.user_id = user_id
+  }
+}
+
+/**
+ * 编辑用户年龄请求体
+ */
+export class EditUserAgeRequest {
+  /**
+   * @param {number} user_id 用户ID
+   * @param {number} age 用户年龄
+   */
+  constructor(user_id, age) {
+    this.user_id = user_id
+    this.age = age
+  }
+}
+
+/**
+ * 编辑用户年龄响应体
+ */
+export class EditUserAgeResponse {
+  /**
+   * @param {boolean} success 是否编辑成功
+   */
+  constructor(success) {
+    this.success = success
+  }
+}
+
+/**
+ * 编辑用户目标性别请求体
+ */
+export class EditTargetGenderRequest {
+  /**
+   * @param {number} user_id 用户ID
+   * @param {number} target_gender 用户目标性别 1/2/3
+   */
+  constructor(user_id, target_gender) {
+    this.user_id = user_id
+    this.target_gender = target_gender
+  }
+}
+
+/**
+ * 编辑用户目标性别响应体
+ */
+export class EditTargetGenderResponse {
+  /**
+   * @param {boolean} success 是否编辑成功
+   */
+  constructor(success) {
+    this.success = success
+  }
+}
+
+/**
+ * 编辑用户简介请求体
+ */
+export class EditSummaryRequest {
+  /**
+   * @param {number} user_id 用户ID
+   * @param {string} summary 用户简介
+   */
+  constructor(user_id, summary) {
+    this.user_id = user_id
+    this.summary = summary
+  }
+}
+
+/**
+ * 编辑用户简介响应体
+ */
+export class EditSummaryResponse {
+  /**
+   * @param {boolean} success 是否编辑成功
+   */
+  constructor(success) {
+    this.success = success
+  }
+}
+
+/**
+ * 保存用户信息到数据库请求体
+ */
+export class SaveUserInfoToDatabaseRequest {
+  /**
+   * @param {number|null} user_id 用户ID（可选）
+   */
+  constructor(user_id = null) {
+    this.user_id = user_id
+  }
+}
+
+/**
+ * 保存用户信息到数据库响应体
+ */
+export class SaveUserInfoToDatabaseResponse {
+  /**
+   * @param {boolean} success 是否保存成功
+   */
+  constructor(success) {
+    this.success = success
+  }
+}
+
+/**
+ * 根据用户id获取用户信息请求体
+ */
+export class GetUserInfoWithUserIdRequest {
+  /**
+   * @param {number} user_id 用户ID
+   */
+  constructor(user_id) {
+    this.user_id = user_id
+  }
+}
+
+/**
+ * 根据用户id获取用户信息响应体
+ */
+export class GetUserInfoWithUserIdResponse {
+  /**
+   * @param {number} user_id 用户ID
+   * @param {string} telegram_user_name 用户的 Telegram 用户名
+   * @param {number} telegram_id 用户的 Telegram ID
+   * @param {number} gender 用户性别 1/2/3
+   * @param {number|null} age 用户年龄
+   * @param {number|null} target_gender 用户目标性别 1/2/3
+   * @param {string|null} user_personality_trait 用户简介
+   * @param {Array<number>} match_ids 匹配ID列表
+   */
+  constructor(user_id, telegram_user_name, telegram_id, gender, age = null, target_gender = null, user_personality_trait = null, match_ids = []) {
+    this.user_id = user_id
+    this.telegram_user_name = telegram_user_name
+    this.telegram_id = telegram_id
+    this.gender = gender
+    this.age = age
+    this.target_gender = target_gender
+    this.user_personality_trait = user_personality_trait
+    this.match_ids = match_ids
   }
 }
 
@@ -933,3 +931,225 @@ HOW TO USE APISchemes IN YOUR CODE:
       return CreateMaleUserResponse.fromApiResponse(apiResponse)
     }
 */ 
+
+// -------------------------------
+// 匹配管理 MatchManager
+// -------------------------------
+
+/**
+ * 创建匹配请求体
+ */
+export class CreateMatchRequest {
+  /**
+   * @param {number} user_id_1 第一个用户ID
+   * @param {number} user_id_2 第二个用户ID
+   * @param {string} reason_1 给用户1的匹配原因
+   * @param {string} reason_2 给用户2的匹配原因
+   * @param {number} match_score 匹配分数
+   */
+  constructor(user_id_1, user_id_2, reason_1, reason_2, match_score) {
+    this.user_id_1 = user_id_1
+    this.user_id_2 = user_id_2
+    this.reason_1 = reason_1
+    this.reason_2 = reason_2
+    this.match_score = match_score
+  }
+}
+
+/**
+ * 创建匹配响应体
+ */
+export class CreateMatchResponse {
+  /**
+   * @param {number} match_id 新创建的匹配ID
+   */
+  constructor(match_id) {
+    this.match_id = match_id
+  }
+}
+
+/**
+ * 获取匹配信息请求体
+ */
+export class GetMatchInfoRequest {
+  /**
+   * @param {number} user_id 请求用户ID
+   * @param {number} match_id 匹配ID
+   */
+  constructor(user_id, match_id) {
+    this.user_id = user_id
+    this.match_id = match_id
+  }
+}
+
+/**
+ * 获取匹配信息响应体
+ */
+export class GetMatchInfoResponse {
+  /**
+   * @param {number} target_user_id 目标用户ID
+   * @param {string} description_for_target 给目标用户的描述
+   * @param {boolean} is_liked 是否已点赞
+   * @param {number} match_score 匹配分数
+   * @param {Object} mutual_game_scores 互动游戏分数
+   * @param {number|null} chatroom_id 聊天室ID
+   */
+  constructor(target_user_id, description_for_target, is_liked, match_score, mutual_game_scores, chatroom_id = null) {
+    this.target_user_id = target_user_id
+    this.description_for_target = description_for_target
+    this.is_liked = is_liked
+    this.match_score = match_score
+    this.mutual_game_scores = mutual_game_scores
+    this.chatroom_id = chatroom_id
+  }
+}
+
+/**
+ * 切换点赞状态请求体
+ */
+export class ToggleLikeRequest {
+  /**
+   * @param {number} match_id 匹配ID
+   */
+  constructor(match_id) {
+    this.match_id = match_id
+  }
+}
+
+/**
+ * 切换点赞状态响应体
+ */
+export class ToggleLikeResponse {
+  /**
+   * @param {boolean} success 操作是否成功
+   */
+  constructor(success) {
+    this.success = success
+  }
+}
+
+/**
+ * 保存匹配到数据库请求体
+ */
+export class SaveMatchToDatabaseRequest {
+  /**
+   * @param {number|null} match_id 匹配ID（可选）
+   */
+  constructor(match_id = null) {
+    this.match_id = match_id
+  }
+}
+
+/**
+ * 保存匹配到数据库响应体
+ */
+export class SaveMatchToDatabaseResponse {
+  /**
+   * @param {boolean} success 保存是否成功
+   */
+  constructor(success) {
+    this.success = success
+  }
+}
+
+// -------------------------------
+// 聊天室管理 ChatroomManager
+// -------------------------------
+
+/**
+ * 获取或创建聊天室请求体
+ */
+export class GetOrCreateChatroomRequest {
+  /**
+   * @param {number} user_id_1 第一个用户的ID
+   * @param {number} user_id_2 第二个用户的ID
+   * @param {number} match_id 匹配ID
+   */
+  constructor(user_id_1, user_id_2, match_id) {
+    this.user_id_1 = user_id_1
+    this.user_id_2 = user_id_2
+    this.match_id = match_id
+  }
+}
+
+/**
+ * 获取或创建聊天室响应体
+ */
+export class GetOrCreateChatroomResponse {
+  /**
+   * @param {boolean} success 是否操作成功
+   * @param {number} chatroom_id 聊天室ID
+   */
+  constructor(success, chatroom_id) {
+    this.success = success
+    this.chatroom_id = chatroom_id
+  }
+}
+
+/**
+ * 获取聊天历史记录请求体
+ */
+export class GetChatHistoryRequest {
+  /**
+   * @param {number} chatroom_id 聊天室ID
+   * @param {number} user_id 请求用户的ID
+   */
+  constructor(chatroom_id, user_id) {
+    this.chatroom_id = chatroom_id
+    this.user_id = user_id
+  }
+}
+
+/**
+ * 聊天消息结构体
+ */
+export class ChatMessage {
+  /**
+   * @param {string} sender_name 发送者名称或'I'
+   * @param {string} message 消息内容
+   * @param {string} datetime 消息时间
+   */
+  constructor(sender_name, message, datetime) {
+    this.sender_name = sender_name
+    this.message = message
+    this.datetime = datetime
+  }
+}
+
+/**
+ * 获取聊天历史记录响应体
+ */
+export class GetChatHistoryResponse {
+  /**
+   * @param {boolean} success 是否获取成功
+   * @param {Array<ChatMessage>} messages 聊天记录
+   */
+  constructor(success, messages = []) {
+    this.success = success
+    this.messages = messages
+  }
+}
+
+/**
+ * 保存聊天室历史记录请求体
+ */
+export class SaveChatroomHistoryRequest {
+  /**
+   * @param {number|null} chatroom_id 聊天室ID（可选）
+   */
+  constructor(chatroom_id = null) {
+    this.chatroom_id = chatroom_id
+  }
+}
+
+/**
+ * 保存聊天室历史记录响应体
+ */
+export class SaveChatroomHistoryResponse {
+  /**
+   * @param {boolean} success 是否保存成功
+   */
+  constructor(success) {
+    this.success = success
+  }
+} 

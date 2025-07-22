@@ -8,6 +8,10 @@ export const useUserStore = defineStore('user', () => {
   const currentUser = ref(null)
   const isLoading = ref(false)
   const isInitialized = ref(false)
+  
+  // 当前匹配信息
+  const currentMatch = ref(null)
+  const matchTargetUser = ref(null)
 
   // 计算属性
   const userId = computed(() => currentUser.value?.user_id || null)
@@ -17,6 +21,15 @@ export const useUserStore = defineStore('user', () => {
   const targetGender = computed(() => currentUser.value?.target_gender || null)
   const userSummary = computed(() => currentUser.value?.summary || null)
   const matchIds = computed(() => currentUser.value?.match_ids || [])
+
+  // 匹配相关计算属性
+  const currentMatchId = computed(() => currentMatch.value?.match_id || null)
+  const targetUserId = computed(() => currentMatch.value?.target_user_id || null)
+  const matchScore = computed(() => currentMatch.value?.match_score || null)
+  const matchDescription = computed(() => currentMatch.value?.description_for_target || null)
+  const isLiked = computed(() => currentMatch.value?.is_liked || false)
+  const chatroomId = computed(() => currentMatch.value?.chatroom_id || null)
+  const targetUserName = computed(() => matchTargetUser.value?.telegram_user_name || null)
 
   // 是否有用户信息
   const hasUser = computed(() => !!currentUser.value)
@@ -153,6 +166,65 @@ export const useUserStore = defineStore('user', () => {
   }
 
   /**
+   * 存储当前匹配信息
+   */
+  const setCurrentMatch = (matchData) => {
+    currentMatch.value = {
+      match_id: matchData.match_id,
+      target_user_id: matchData.matched_user_id || matchData.target_user_id,
+      match_score: matchData.match_score,
+      description_for_target: matchData.reason_for_self || matchData.description_for_target,
+      is_liked: matchData.is_liked || false,
+      chatroom_id: matchData.chatroom_id || null,
+      mutual_game_scores: matchData.mutual_game_scores || {}
+    }
+    
+    // 将匹配信息存储到sessionStorage
+    sessionStorage.setItem('current_match', JSON.stringify(currentMatch.value))
+    debugLog.user('当前匹配信息已存储:', currentMatch.value)
+  }
+
+  /**
+   * 存储目标用户信息
+   */
+  const setTargetUser = (userData) => {
+    matchTargetUser.value = userData
+    sessionStorage.setItem('target_user', JSON.stringify(userData))
+    debugLog.user('目标用户信息已存储:', userData)
+  }
+
+  /**
+   * 从sessionStorage恢复匹配信息
+   */
+  const restoreMatchFromSession = () => {
+    const matchData = sessionStorage.getItem('current_match')
+    const targetData = sessionStorage.getItem('target_user')
+    
+    if (matchData) {
+      currentMatch.value = JSON.parse(matchData)
+      debugLog.user('从session恢复匹配信息:', currentMatch.value)
+    }
+    
+    if (targetData) {
+      matchTargetUser.value = JSON.parse(targetData)
+      debugLog.user('从session恢复目标用户信息:', matchTargetUser.value)
+    }
+    
+    return !!(currentMatch.value && matchTargetUser.value)
+  }
+
+  /**
+   * 清除匹配信息
+   */
+  const clearMatchInfo = () => {
+    currentMatch.value = null
+    matchTargetUser.value = null
+    sessionStorage.removeItem('current_match')
+    sessionStorage.removeItem('target_user')
+    debugLog.user('匹配信息已清除')
+  }
+
+  /**
    * 从sessionStorage恢复用户ID
    */
   const getUserIdFromSession = () => {
@@ -165,6 +237,8 @@ export const useUserStore = defineStore('user', () => {
     currentUser,
     isLoading,
     isInitialized,
+    currentMatch,
+    matchTargetUser,
     
     // 计算属性
     userId,
@@ -177,6 +251,15 @@ export const useUserStore = defineStore('user', () => {
     hasUser,
     hasBasicProfile,
     
+    // 匹配相关计算属性
+    currentMatchId,
+    targetUserId,
+    matchScore,
+    matchDescription,
+    isLiked,
+    chatroomId,
+    targetUserName,
+    
     // 方法
     initUser,
     updateUser,
@@ -186,6 +269,12 @@ export const useUserStore = defineStore('user', () => {
     setUserSummary,
     addMatchId,
     clearUser,
-    getUserIdFromSession
+    getUserIdFromSession,
+    
+    // 匹配相关方法
+    setCurrentMatch,
+    setTargetUser,
+    restoreMatchFromSession,
+    clearMatchInfo
   }
 })

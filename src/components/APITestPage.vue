@@ -382,7 +382,7 @@
 </template>
 
 <script>
-import { apiService } from '../services/APIServices.js'
+import { APIServices } from '../services/APIServices.js'
 
 export default {
   name: 'APITestPage',
@@ -446,17 +446,17 @@ export default {
   },
   
   mounted() {
-    this.isFakeMode = apiService.getFakeMode()
-    this.fakeDelay = apiService.getFakeDelay()
+    this.isFakeMode = APIServices.getFakeMode()
+    this.fakeDelay = APIServices.getFakeDelay()
   },
   
   methods: {
     toggleFakeMode() {
-      this.isFakeMode = apiService.toggleFakeMode()
+      this.isFakeMode = APIServices.toggleFakeMode()
     },
     
     setFakeDelay() {
-      apiService.setFakeDelay(this.fakeDelay)
+      APIServices.setFakeDelay(this.fakeDelay)
     },
     
     async executeTest(testFunction, resultKey, serviceKey) {
@@ -477,7 +477,7 @@ export default {
     // User Service Tests
     async testCreateFemaleUser() {
       await this.executeTest(
-        () => apiService.createFemaleUser(this.userTests.telegramId),
+        () => APIServices.createFemaleUser(this.userTests.telegramId),
         'createFemaleResult',
         'userTests'
       )
@@ -486,7 +486,7 @@ export default {
     async testCreateMaleUser() {
       const mode = this.userTests.mode ? parseInt(this.userTests.mode) : null
       await this.executeTest(
-        () => apiService.createMaleUser(this.userTests.telegramId, mode),
+        () => APIServices.createMaleUser(this.userTests.telegramId, mode),
         'createMaleResult',
         'userTests'
       )
@@ -494,7 +494,7 @@ export default {
     
     async testGetUserFromSession() {
       await this.executeTest(
-        () => apiService.getUserFromTelegramSession(this.userTests.telegramId),
+        () => APIServices.getUserFromTelegramSession(this.userTests.telegramId),
         'sessionResult',
         'userTests'
       )
@@ -502,7 +502,7 @@ export default {
     
     async testUserExist() {
       await this.executeTest(
-        () => apiService.getUserExist(this.userTests.telegramId),
+        () => APIServices.getUserExist(this.userTests.telegramId),
         'existResult',
         'userTests'
       )
@@ -511,7 +511,7 @@ export default {
     // Card Poll Service Tests
     async testGetQuestion() {
       await this.executeTest(
-        () => apiService.getQuestion(this.cardPollTests.telegramId, this.cardPollTests.swipeLeft),
+        () => APIServices.getQuestion(this.cardPollTests.telegramId, this.cardPollTests.swipeLeft),
         'questionResult',
         'cardPollTests'
       )
@@ -519,7 +519,7 @@ export default {
     
     async testEditAnswer() {
       await this.executeTest(
-        () => apiService.editAnswer(
+        () => APIServices.editAnswer(
           this.cardPollTests.telegramId,
           this.cardPollTests.questionId,
           this.cardPollTests.answer,
@@ -532,7 +532,7 @@ export default {
     
     async testLikeAnswer() {
       await this.executeTest(
-        () => apiService.likeAnswer(this.cardPollTests.telegramId, this.cardPollTests.answerId),
+        () => APIServices.likeAnswer(this.cardPollTests.telegramId, this.cardPollTests.answerId),
         'likeResult',
         'cardPollTests'
       )
@@ -540,7 +540,7 @@ export default {
     
     async testBlockAnswer() {
       await this.executeTest(
-        () => apiService.blockAnswer(this.cardPollTests.telegramId, this.cardPollTests.blockAnswerId),
+        () => APIServices.blockAnswer(this.cardPollTests.telegramId, this.cardPollTests.blockAnswerId),
         'blockResult',
         'cardPollTests'
       )
@@ -548,7 +548,7 @@ export default {
     
     async testToggleQuestionSave() {
       await this.executeTest(
-        () => apiService.toggleQuestionSave(this.cardPollTests.telegramId, this.cardPollTests.questionId),
+        () => APIServices.toggleQuestionSave(this.cardPollTests.telegramId, this.cardPollTests.questionId),
         'toggleSaveResult',
         'cardPollTests'
       )
@@ -556,7 +556,7 @@ export default {
     
     async testGetAnswer() {
       await this.executeTest(
-        () => apiService.getAnswer(this.cardPollTests.telegramId, this.cardPollTests.swipeLeft),
+        () => APIServices.getAnswer(this.cardPollTests.telegramId, this.cardPollTests.swipeLeft),
         'answerResult',
         'cardPollTests'
       )
@@ -565,7 +565,7 @@ export default {
     // Message Service Tests
     async testGetMatchedUsers() {
       await this.executeTest(
-        () => apiService.getMatchedUsers(this.messageTests.telegramId),
+        () => APIServices.getMatchedUsers(this.messageTests.telegramId),
         'matchesResult',
         'messageTests'
       )
@@ -574,7 +574,7 @@ export default {
     // QAM Service Tests
     async testNewQuestion() {
       await this.executeTest(
-        () => apiService.newQuestion(this.qamTests.telegramId, this.qamTests.questionText),
+        () => APIServices.newQuestion(this.qamTests.telegramId, this.qamTests.questionText),
         'newQuestionResult',
         'qamTests'
       )
@@ -582,7 +582,7 @@ export default {
     
     async testGetQuestionList() {
       await this.executeTest(
-        () => apiService.getQuestionList(this.qamTests.telegramId),
+        () => APIServices.getQuestionList(this.qamTests.telegramId),
         'questionListResult',
         'qamTests'
       )
@@ -590,7 +590,7 @@ export default {
     
     async testToggleQuestionActive() {
       await this.executeTest(
-        () => apiService.toggleQuestionActive(this.qamTests.questionId),
+        () => APIServices.toggleQuestionActive(this.qamTests.questionId),
         'toggleActiveResult',
         'qamTests'
       )
@@ -598,7 +598,7 @@ export default {
     
     async testGetAnswerList() {
       await this.executeTest(
-        () => apiService.getAnswerListForAQuestion(this.qamTests.questionId),
+        () => APIServices.getAnswerListForAQuestion(this.qamTests.questionId),
         'answerListResult',
         'qamTests'
       )
@@ -606,7 +606,7 @@ export default {
     
     async testGetAnswerQAM() {
       await this.executeTest(
-        () => apiService.getAnswerQAM(this.qamTests.telegramId),
+        () => APIServices.getAnswerQAM(this.qamTests.telegramId),
         'answerQAMResult',
         'qamTests'
       )
