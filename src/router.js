@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 // 新页面骨架组件导入
-import FirstMatch from './views/FirstMatch.vue'
+import Loading from './views/Loading.vue'
 import WhyHim from './views/WhyHim.vue'
 import Chatroom from './views/Chatroom.vue'
 import Match from './views/Match.vue'
@@ -10,8 +10,8 @@ import Profile from './views/Profile.vue'
 const routes = [
   {
     path: '/',
-    name: 'FirstMatch',
-    component: FirstMatch
+    name: 'Loading',
+    component: Loading
   },
   {
     path: '/why-him',

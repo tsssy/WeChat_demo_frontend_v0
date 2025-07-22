@@ -1,7 +1,7 @@
 <template>
-  <div class="first-match-container">
-    <div class="first-match-page">
-      <!-- 首次匹配页面骨架 -->
+  <div class="loading-container">
+    <div class="loading-page">
+      <!-- 加载页面骨架 -->
       <h2>Finding your first match</h2>
       <div class="loading-spinner"></div>
       <ul>
@@ -39,7 +39,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.first-match-container {
+.loading-container {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
@@ -49,7 +49,7 @@ onUnmounted(() => {
   background: #fff;
 }
 
-.first-match-page {
+.loading-page {
   height: 100vh;
   width: 100%;
   display: flex;
@@ -64,7 +64,7 @@ onUnmounted(() => {
 }
 
 @media (min-width: 768px) {
-  .first-match-container {
+  .loading-container {
     width: 430px;
     left: 50%;
     transform: translateX(-50%);
@@ -73,13 +73,13 @@ onUnmounted(() => {
   }
 }
 
-.first-match-page h2 {
+.loading-page h2 {
   font-size: 1.5rem;
   margin: 0 0 0.8rem 0;
   flex-shrink: 0;
 }
 
-.first-match-page ul {
+.loading-page ul {
   width: 100%;
   text-align: left;
   padding: 0 1rem;
@@ -90,23 +90,23 @@ onUnmounted(() => {
 }
 
 @media (min-width: 768px) {
-  .first-match-page ul {
+  .loading-page ul {
     max-width: 320px;
     max-height: 30vh;
   }
   
-  .first-match-page h2 {
+  .loading-page h2 {
     font-size: 1.8rem;
   }
 }
 
-.first-match-page li {
+.loading-page li {
   margin-bottom: 0.4rem;
   line-height: 1.3;
   font-size: 0.9rem;
 }
 
-.first-match-page p {
+.loading-page p {
   font-size: 0.9rem;
   margin: 0.8rem 0 0 0;
   flex-shrink: 0;
