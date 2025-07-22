@@ -62,6 +62,17 @@ function navigateTo(tab) {
   z-index: 1000;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
 }
+
+@media (min-width: 768px) {
+  .bottom-nav {
+    left: 50%;
+    transform: translateX(-50%);
+    width: 430px;
+    border-radius: 0 0 12px 12px;
+    border-left: 1px solid #eee;
+    border-right: 1px solid #eee;
+  }
+}
 .nav-item {
   display: flex;
   flex-direction: column;
@@ -69,15 +80,28 @@ function navigateTo(tab) {
   flex: 1;
   color: #888;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 12px;
   transition: color 0.2s;
+  padding: 4px;
+}
+
+@media (min-width: 768px) {
+  .nav-item {
+    font-size: 14px;
+  }
 }
 .nav-item.active {
   color: #ff6b81;
   font-weight: bold;
 }
 .nav-icon {
-  font-size: 22px;
+  font-size: 20px;
   margin-bottom: 2px;
+}
+
+@media (min-width: 768px) {
+  .nav-icon {
+    font-size: 22px;
+  }
 }
 </style>

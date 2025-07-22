@@ -1,28 +1,43 @@
 @import './base.css';
 
+/* Mobile-first responsive layout */
 html, body {
-  background: #000;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
   height: 100%;
+  width: 100%;
 }
 
 body {
-  background: #000;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  font-size: 16px;
 }
 
 #app {
-  background: #000;
   min-height: 100vh;
   width: 100%;
+  max-width: 100%;
   margin: 0;
   padding: 0;
   font-weight: normal;
   overflow-x: hidden;
+}
+
+/* Page container base styles for mobile-first */
+.page-container {
+  width: 100%;
+  min-height: 100vh;
+  padding: 16px;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom)); /* Space for bottom nav */
+  box-sizing: border-box;
+}
+
+/* Pages without bottom navigation */
+.page-container.no-bottom-nav {
+  padding-bottom: 16px;
 }
 
 a,
@@ -39,20 +54,27 @@ a,
   }
 }
 
-@media (min-width: 1024px) {
+/* Desktop styles - max width constraints */
+@media (min-width: 768px) {
   body {
     display: flex;
-    align-items: flex-start; /* 改为顶部对齐，而不是居中 */
     justify-content: center;
-    padding-top: 20px; /* 添加顶部内边距防止被浏览器工具栏遮挡 */
+    align-items: flex-start;
+    background: #f5f5f5;
+    padding: 20px 0;
   }
 
   #app {
-    display: flex;
-    flex-direction: column;
-    padding: 0;
     width: 100%;
-    max-width: 430px; /* Mobile-first design */
+    max-width: 430px;
     margin: 0 auto;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+  }
+  
+  .page-container {
+    padding: 20px;
   }
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="chatroom-page">
+  <div class="page-container no-bottom-nav chatroom-page">
     <!-- 聊天室页面骨架 -->
     <div class="chatroom-header">
       <button class="close-btn" @click="closeChat">×</button>
@@ -57,10 +57,11 @@ function closeChat() {
 
 <style scoped>
 .chatroom-page {
-  min-height: 100vh;
   background: #fff;
   display: flex;
   flex-direction: column;
+  padding: 0;
+  height: 100vh;
 }
 .chatroom-header {
   display: flex;
@@ -68,14 +69,23 @@ function closeChat() {
   justify-content: space-between;
   padding: 12px 16px;
   border-bottom: 1px solid #eee;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 .close-btn, .like-btn {
   background: #eee;
   border: none;
   border-radius: 16px;
-  padding: 6px 16px;
-  font-size: 1rem;
+  padding: 8px 16px;
+  font-size: 0.9rem;
   cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.close-btn:hover, .like-btn:hover {
+  background: #ddd;
 }
 .chat-username {
   font-weight: bold;
@@ -86,15 +96,25 @@ function closeChat() {
   padding: 16px;
   overflow-y: auto;
   background: #f8f8f8;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .message {
   background: #ff6b81;
   color: #fff;
   border-radius: 16px;
-  padding: 10px 16px;
-  margin-bottom: 10px;
-  max-width: 70%;
+  padding: 12px 16px;
+  max-width: 280px;
   align-self: flex-end;
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+@media (min-width: 768px) {
+  .message {
+    max-width: 300px;
+  }
 }
 .chat-input-bar {
   display: flex;
@@ -102,22 +122,38 @@ function closeChat() {
   padding: 12px 16px;
   border-top: 1px solid #eee;
   background: #fff;
+  position: sticky;
+  bottom: 0;
 }
 .chat-input-bar input {
   flex: 1;
   border: 1px solid #ccc;
-  border-radius: 16px;
-  padding: 8px 12px;
+  border-radius: 20px;
+  padding: 10px 16px;
   margin-right: 8px;
+  font-size: 1rem;
+  outline: none;
+}
+
+.chat-input-bar input:focus {
+  border-color: #007bff;
 }
 .send-btn {
   background: #007bff;
   color: #fff;
   border: none;
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   font-size: 1.2rem;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s;
+}
+
+.send-btn:hover {
+  background: #0056b3;
 }
 </style> 

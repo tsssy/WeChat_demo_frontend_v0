@@ -50,15 +50,26 @@ defineExpose({
 .toast {
   position: fixed;
   top: 20px;
-  right: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 9999;
-  min-width: 300px;
-  max-width: 400px;
+  min-width: 280px;
+  max-width: 90vw;
   padding: 12px 16px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   font-family: Arial, sans-serif;
   font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  .toast {
+    left: auto;
+    right: 20px;
+    transform: none;
+    min-width: 300px;
+    max-width: 400px;
+  }
 }
 
 .toast-content {
