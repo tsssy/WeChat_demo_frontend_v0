@@ -104,7 +104,7 @@ const loadMatchData = async () => {
     
     try {
       // Fetch match information from API
-      const matchResponse = await APIServices.getMatchInfo(currentUserId, currentMatchId)
+      const matchResponse = await APIServices.getMatchInfo({ user_id: currentUserId, match_id: currentMatchId })
       matchInfo.value = matchResponse
       debugLog.log('Match info fetched:', matchResponse)
       

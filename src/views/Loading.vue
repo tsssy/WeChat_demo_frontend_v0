@@ -2,7 +2,7 @@
   <div class="loading-container">
     <div class="loading-page">
       <!-- 加载页面骨架 -->
-      <h2>Finding your first match</h2>
+      <h2>Finding your new match</h2>
       <div class="loading-spinner"></div>
       <ul class="thinking-process">
         <li 
@@ -74,9 +74,11 @@ const isRetrying = ref(false)
 
 // 加载状态信息
 const loadingMessages = ref([
-  'Analyzing your personality',
-  'Confirmed that you are an adventurous person', 
-  'Considering about your past history of being hurt by boys in teenage years. Finding someone who values relationship and has been in your shoes before.'
+  'Analyzing your personality.',
+  'Searching through user database.', 
+  "Analyzing candidates' personality, modelling potential romantic relationships.",
+  "Calculating match scores and matching.",
+  "Comparing, pivotting your best match."
 ])
 
 // 添加重试相关的消息
