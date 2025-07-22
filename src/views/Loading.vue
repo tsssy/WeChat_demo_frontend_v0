@@ -15,26 +15,50 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '../stores/user.js'
 import eventBus from '../utils/eventBus.js'
+import { debugLog } from '../utils/debug.js'
 
 const router = useRouter()
+const userStore = useUserStore()
+
+// 加载状态信息
+const loadingMessages = ref([
+  'Analyzing your personality',
+  'Confirmed that you are an adventurous person',
+  'Considering about your past history of being hurt by boys in teenage years. Finding someone who values relationship and has been in your shoes before.'
+])
 
 // 监听匹配成功事件，自动跳转到WhyHim页面
 function handleMatchSuccess(msg) {
+  debugLog.event('收到匹配成功事件:', msg)
   // 这里可以根据msg内容判断是否匹配成功
   // 假设msg.type === 'match_success'表示成功
   if (msg && msg.type === 'match_success') {
+    debugLog.route('跳转到 WhyHim 页面')
     router.push('/why-him')
   }
 }
 
 onMounted(() => {
   eventBus.on('match:message', handleMatchSuccess)
+  
+  // 显示当前用户信息 (开发调试)
+  debugLog.user('Loading页面挂载 - 当前用户ID:', userStore.userId)
+  debugLog.user('Loading页面挂载 - 完整用户信息:', userStore.currentUser)
+  debugLog.user('Loading页面挂载 - 用户状态:', {
+    hasUser: userStore.hasUser,
+    hasBasicProfile: userStore.hasBasicProfile,
+    isLoading: userStore.isLoading,
+    isInitialized: userStore.isInitialized
+  })
 })
+
 onUnmounted(() => {
   eventBus.off('match:message', handleMatchSuccess)
+  debugLog.log('Loading页面卸载')
 })
 </script>
 

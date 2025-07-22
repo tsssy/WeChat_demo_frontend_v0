@@ -1,33 +1,111 @@
 // Global debug configuration
-// Set to false in production to disable all console logging
-// export const DEBUG = import.meta.env.PROD ? false : true
-export const DEBUG = true //change to false before merge
+// Automatically enables debug mode in development, disables in production
+export const DEBUG = import.meta.env.DEV
+export const IS_DEVELOPMENT = import.meta.env.DEV
+export const IS_PRODUCTION = import.meta.env.PROD
 
-// Debug logger utility
+// Debug configuration object
+export const debugConfig = {
+  enabled: DEBUG,
+  showUserInfo: DEBUG,
+  showApiCalls: DEBUG,
+  showWebSocket: DEBUG,
+  showRouteChanges: DEBUG,
+  showEventBus: DEBUG,
+  environment: IS_DEVELOPMENT ? 'development' : 'production'
+}
+
+// Enhanced debug logger utility with categories
 export const debugLog = {
   log: (...args) => {
     if (DEBUG) {
-      console.log(...args)
+      console.log(`[DEBUG]`, ...args)
     }
   },
   error: (...args) => {
     if (DEBUG) {
-      console.error(...args)
+      console.error(`[ERROR]`, ...args)
     }
   },
   warn: (...args) => {
     if (DEBUG) {
-      console.warn(...args)
+      console.warn(`[WARN]`, ...args)
     }
   },
   info: (...args) => {
     if (DEBUG) {
-      console.info(...args)
+      console.info(`[INFO]`, ...args)
     }
   },
   debug: (...args) => {
     if (DEBUG) {
-      console.debug(...args)
+      console.debug(`[DEBUG]`, ...args)
+    }
+  },
+  // Categorized logging
+  user: (...args) => {
+    if (DEBUG && debugConfig.showUserInfo) {
+      console.log(`[USER]`, ...args)
+    }
+  },
+  api: (...args) => {
+    if (DEBUG && debugConfig.showApiCalls) {
+      console.log(`[API]`, ...args)
+    }
+  },
+  websocket: (...args) => {
+    if (DEBUG && debugConfig.showWebSocket) {
+      console.log(`[WS]`, ...args)
+    }
+  },
+  route: (...args) => {
+    if (DEBUG && debugConfig.showRouteChanges) {
+      console.log(`[ROUTE]`, ...args)
+    }
+  },
+  event: (...args) => {
+    if (DEBUG && debugConfig.showEventBus) {
+      console.log(`[EVENT]`, ...args)
+    }
+  }
+}
+
+// Development helpers
+export const devHelpers = {
+  // Show current environment info
+  showEnvironment: () => {
+    if (DEBUG) {
+      console.group(`🛠️ Environment Info`)
+      console.log('Mode:', import.meta.env.MODE)
+      console.log('Development:', IS_DEVELOPMENT)
+      console.log('Production:', IS_PRODUCTION)
+      console.log('Base URL:', import.meta.env.BASE_URL)
+      console.log('Debug Config:', debugConfig)
+      console.groupEnd()
+    }
+  },
+  
+  // Performance timing helper
+  time: (label) => {
+    if (DEBUG) {
+      console.time(`⏱️ ${label}`)
+    }
+  },
+  
+  timeEnd: (label) => {
+    if (DEBUG) {
+      console.timeEnd(`⏱️ ${label}`)
+    }
+  },
+
+  // Memory usage (if available)
+  showMemory: () => {
+    if (DEBUG && performance.memory) {
+      console.log(`💾 Memory:`, {
+        used: `${Math.round(performance.memory.usedJSHeapSize / 1024 / 1024)}MB`,
+        total: `${Math.round(performance.memory.totalJSHeapSize / 1024 / 1024)}MB`,
+        limit: `${Math.round(performance.memory.jsHeapSizeLimit / 1024 / 1024)}MB`
+      })
     }
   }
 }
@@ -45,10 +123,12 @@ if (!DEBUG) {
 
   // Override console methods to do nothing in production
   console.log = () => {}
-  console.error = () => {}
   console.warn = () => {}
   console.info = () => {}
   console.debug = () => {}
+
+  // Keep errors in production for critical issues
+  // console.error = () => {} // Commented out to keep errors visible
 
   // Provide a way to restore console methods if needed
   window.__restoreConsole = () => {
@@ -58,4 +138,10 @@ if (!DEBUG) {
     console.info = originalConsole.info
     console.debug = originalConsole.debug
   }
+}
+
+// Initialize debug mode on import
+if (DEBUG) {
+  console.log(`🚀 Debug mode enabled (${import.meta.env.MODE})`)
+  devHelpers.showEnvironment()
 } 
