@@ -1,48 +1,37 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Entry from './Entry.vue'
-import GenderSelection from './GenderSelection.vue'
-import ModeSelection from './ModeSelection.vue'
-import Home from './Home.vue'
-import APITestPage from './components/APITestPage.vue'
-import Matches from './views/Matches.vue'
-import YourContent from './views/YourContent.vue'
+// 新页面骨架组件导入
+import FirstMatch from './views/FirstMatch.vue'
+import WhyHim from './views/WhyHim.vue'
+import Chatroom from './views/Chatroom.vue'
+import Match from './views/Match.vue'
+import Mate from './views/Mate.vue'
 import Profile from './views/Profile.vue'
 
 const routes = [
   {
     path: '/',
-    name: 'Entry',
-    component: Entry
+    name: 'FirstMatch',
+    component: FirstMatch
   },
   {
-    path: '/gender-selection',
-    name: 'GenderSelection',
-    component: GenderSelection
+    path: '/why-him',
+    name: 'WhyHim',
+    component: WhyHim
   },
   {
-    path: '/mode-selection',
-    name: 'ModeSelection',
-    component: ModeSelection
+    path: '/chatroom',
+    name: 'Chatroom',
+    component: Chatroom
   },
   {
-    path: '/home',
-    name: 'Home',
-    component: Home
+    path: '/match',
+    name: 'Match',
+    component: Match
   },
   {
-    path: '/api-test',
-    name: 'APITest',
-    component: APITestPage
-  },
-  {
-    path: '/matches',
-    name: 'Matches',
-    component: Matches
-  },
-  {
-    path: '/your-content',
-    name: 'YourContent',
-    component: YourContent
+    path: '/mate',
+    name: 'Mate',
+    component: Mate
   },
   {
     path: '/profile',
