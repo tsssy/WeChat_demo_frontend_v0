@@ -217,11 +217,33 @@ export const APIServices = {
    */
   async getChatHistory(req) {
     if (typeof req !== 'object' || req === null) req = { chatroom_id: req.chatroom_id ?? req, user_id: req.user_id ?? 0 }
-    console.log('[API][getChatHistory] 请求体:', req)
+    // 确保参数为整数
+    const requestData = {
+      user_id: parseInt(req.user_id),
+      chatroom_id: parseInt(req.chatroom_id)
+    }
+    // 调试输出
+    console.log('[API][getChatHistory] Request keys:', Object.keys(requestData))
+    console.log('[API][getChatHistory] Request values:', Object.values(requestData))
+    console.log('[API][getChatHistory] Full request:', JSON.stringify(requestData))
+    console.log('[API][getChatHistory] 请求体:', requestData)
     // 中文注释：通过 NetworkManager 发送 POST 请求获取聊天历史记录
-    const res = await NetworkManager.post('/api/v1/ChatroomManager/get_chat_history', req)
+    const res = await NetworkManager.post('/api/v1/ChatroomManager/get_chat_history', requestData)
     console.log('[API][getChatHistory] 响应体:', res)
-    const messages = (res.messages || []).map(m => new ChatMessage(m.sender_name, m.message, m.datetime))
+    // 兼容后端返回的两种格式：对象数组或嵌套数组
+    let messages = []
+    if (Array.isArray(res.messages) && res.messages.length > 0) {
+      if (Array.isArray(res.messages[0])) {
+        // 旧格式：嵌套数组 [message, datetime, senderId, senderName]
+        messages = res.messages.map(msgArray => {
+          const [message, datetime, senderId, senderName] = msgArray
+          return new ChatMessage(senderName, message, datetime)
+        })
+      } else if (typeof res.messages[0] === 'object') {
+        // 新格式：对象数组 { sender_name, message, datetime }
+        messages = res.messages.map(msg => new ChatMessage(msg.sender_name, msg.message, msg.datetime))
+      }
+    }
     return new GetChatHistoryResponse(res.success, messages)
   },
 

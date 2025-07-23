@@ -27,17 +27,30 @@
       <div v-if="messages.length === 0" class="no-messages">
         <p>No messages yet. Start the conversation!</p>
       </div>
-      <!-- Display loaded messages -->
-      <div v-for="message in messages" :key="message.datetime" 
-           :class="['message', message.sender_name === userStore.userName ? 'self' : 'other']">
-        <div class="message-content">{{ message.message }}</div>
-        <div class="message-time">{{ formatTime(message.datetime) }}</div>
-      </div>
+      <!-- Display messages using MessageBox component -->
+      <MessageBox 
+        v-for="message in messages" 
+        :key="message.id"
+        :message="message.content"
+        :message-type="message.type"
+      />
     </div>
     
     <div class="chat-input-bar">
-      <input type="text" placeholder="Type to send" />
-      <button class="send-btn">➤</button>
+      <input 
+        type="text" 
+        v-model="messageInput"
+        placeholder="Type to send" 
+        @keypress="handleKeyPress"
+        :disabled="isSending"
+      />
+      <button 
+        class="send-btn" 
+        @click="sendMessage"
+        :disabled="isSending || !messageInput.trim()"
+      >
+        {{ isSending ? '...' : '➤' }}
+      </button>
     </div>
     
     <!-- Toast component -->
@@ -53,34 +66,42 @@ import { APIServices } from '../services/APIServices.js'
 import { debugLog } from '../utils/debug.js'
 import eventBus from '../utils/eventBus.js'
 import Toast from '../components/Toast.vue'
+import MessageBox from '../components/MessageBox.vue'
+import WebSocketClient from '../wsclients/WebSocketClient.js'
 
 const router = useRouter()
 const userStore = useUserStore()
 
 // Component state
 const isLiked = ref(false)
-const messages = ref([])
+const messages = ref([]) // Will store both historical and new messages
 const isLoading = ref(true)
 const error = ref(null)
 const toast = ref(null)
 const chatUsername = ref('Someone Special')
+const messageInput = ref('')
+const isSending = ref(false)
 
-// Load chat history on component mount
+// WebSocket client
+const messageClient = ref(null)
+
+// Load chat history using get_chat_history API call
 const loadChatHistory = async () => {
   try {
     isLoading.value = true
     error.value = null
     
     const currentUserId = userStore.userId
-    const currentChatroomId = userStore.chatroomId
+    let currentChatroomId = userStore.chatroomId
     
     // Try to get chatroom_id from session if not in store
     if (!currentChatroomId) {
       const sessionMatch = sessionStorage.getItem('current_match')
       if (sessionMatch) {
         const matchData = JSON.parse(sessionMatch)
-        if (matchData.chatroom_id) {
-          debugLog.log('Using chatroom_id from session:', matchData.chatroom_id)
+        currentChatroomId = matchData.chatroom_id
+        if (currentChatroomId) {
+          debugLog.log('Using chatroom_id from session:', currentChatroomId)
         } else {
           throw new Error('No chatroom_id available. Please start from the Why Him page.')
         }
@@ -89,26 +110,41 @@ const loadChatHistory = async () => {
       }
     }
     
-    if (!currentUserId) {
-      throw new Error('User not logged in. Please restart the application.')
+    if (!currentUserId || !currentChatroomId) {
+      throw new Error('Missing user_id or chatroom_id. Please restart from Why Him page.')
     }
     
-    debugLog.log('Loading chat history for:', {
+    debugLog.log('Loading chat history with:', {
       user_id: currentUserId,
-      chatroom_id: currentChatroomId || JSON.parse(sessionStorage.getItem('current_match') || '{}').chatroom_id
+      chatroom_id: currentChatroomId
     })
     
-    // Call get_chat_history API
+    // Call get_chat_history API through APIServices
     const historyResponse = await APIServices.getChatHistory({
       user_id: currentUserId,
-      chatroom_id: currentChatroomId || JSON.parse(sessionStorage.getItem('current_match') || '{}').chatroom_id
+      chatroom_id: currentChatroomId  
     })
     
+    debugLog.log('APIServices response:', historyResponse)
+    
     if (historyResponse.success) {
-      messages.value = historyResponse.messages || []
-      debugLog.log('Chat history loaded:', messages.value.length, 'messages')
+      // Convert APIServices response to display format
+      // historyResponse.messages contains ChatMessage objects with structure:
+      // { sender_name, message, datetime }
+      messages.value = (historyResponse.messages || []).map((msg, index) => ({
+        id: `${msg.datetime}-${msg.sender_name}-${index}`, // Unique ID
+        content: msg.message, // Message content
+        sender_name: msg.sender_name, // Sender name  
+        datetime: msg.datetime, // Timestamp
+        type: msg.sender_name === 'I' ? 'self' : 'other' // Determine alignment based on sender_name
+      }))
+      
+      debugLog.log('Chat history processed:', messages.value.length, 'messages')
+      if (messages.value.length > 0) {
+        debugLog.log('Sample message:', messages.value[0])
+      }
     } else {
-      throw new Error('Failed to load chat history')
+      throw new Error('API returned success: false')
     }
     
     // Set chat username from target user
@@ -126,29 +162,184 @@ const loadChatHistory = async () => {
   }
 }
 
-// Format timestamp for display
-const formatTime = (datetime) => {
-  if (!datetime) return ''
+// Send message function
+const sendMessage = async () => {
+  debugLog.log('Send message clicked, input value:', messageInput.value)
+  
+  // Prevent sending empty messages
+  if (!messageInput.value.trim()) {
+    debugLog.warn('Message is empty, showing warning')
+    toast.value?.show('Please enter a message', 'warning')
+    return
+  }
+  
+  if (isSending.value) {
+    debugLog.warn('Already sending a message, preventing duplicate')
+    return // Prevent double sending
+  }
+  
   try {
-    const date = new Date(datetime)
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    isSending.value = true
+    debugLog.log('Starting message send process...')
+    
+    // Get required data from session storage
+    const currentUserId = userStore.userId
+    const currentTargetUserId = userStore.targetUserId
+    let currentChatroomId = userStore.chatroomId
+    
+    debugLog.log('Initial data from store:', {
+      currentUserId,
+      currentTargetUserId,
+      currentChatroomId
+    })
+    
+    // Try to get chatroom_id from session if not in store
+    if (!currentChatroomId) {
+      const sessionMatch = sessionStorage.getItem('current_match')
+      debugLog.log('Trying to get chatroom_id from session:', sessionMatch)
+      if (sessionMatch) {
+        const matchData = JSON.parse(sessionMatch)
+        currentChatroomId = matchData.chatroom_id
+        debugLog.log('Found chatroom_id in session:', currentChatroomId)
+      }
+    }
+    
+    // Validate required data
+    if (!currentUserId || !currentTargetUserId || !currentChatroomId) {
+      const missing = []
+      if (!currentUserId) missing.push('currentUserId')
+      if (!currentTargetUserId) missing.push('currentTargetUserId')
+      if (!currentChatroomId) missing.push('currentChatroomId')
+      debugLog.error('Missing required data:', missing)
+      throw new Error(`Missing required information: ${missing.join(', ')}`)
+    }
+    
+    // Get WebSocket client instance
+    if (!messageClient.value) {
+      debugLog.log('Getting WebSocket client instance...')
+      messageClient.value = WebSocketClient.getInstance()
+    }
+    
+    debugLog.log('WebSocket client:', messageClient.value)
+    debugLog.log('WebSocket client ready:', messageClient.value?.isReady())
+    
+    if (!messageClient.value) {
+      debugLog.error('WebSocket client is null')
+      throw new Error('WebSocket connection not available. Please refresh the page.')
+    }
+    
+    if (!messageClient.value.isReady()) {
+      debugLog.error('WebSocket client not ready')
+      throw new Error('WebSocket connection not ready. Please wait a moment and try again.')
+    }
+    
+    // Prepare message data (keep target_user_id as number, WebSocketClient will convert)
+    const messageData = {
+      target_user_id: currentTargetUserId, // Keep as number, WebSocketClient handles conversion
+      chatroom_id: currentChatroomId, // Keep as number
+      content: messageInput.value.trim() // Keep as string
+    }
+    
+    debugLog.log('Sending message via WebSocket:', messageData)
+    
+    // Send message via WebSocket
+    const success = messageClient.value.send(
+      messageData.content,
+      messageData.target_user_id,
+      messageData.chatroom_id
+    )
+    
+    debugLog.log('WebSocket send result:', success)
+    
+    if (success) {
+      // Add the sent message to UI immediately
+      addNewMessage(messageData.content, userStore.userName || 'You', true)
+      
+      // Clear input on successful send
+      messageInput.value = ''
+      debugLog.log('Message sent successfully, input cleared')
+    } else {
+      throw new Error('Failed to send message via WebSocket')
+    }
+    
   } catch (error) {
-    return ''
+    debugLog.error('Error sending message:', error)
+    toast.value?.show(`Failed to send message: ${error.message}`, 'error')
+  } finally {
+    isSending.value = false
+    debugLog.log('Message sending process completed')
   }
 }
 
-// 监听聊天消息事件（可根据需要扩展）
-function handleChatMessage(msg) {
-  // 这里可以处理收到的聊天消息
-  // console.log('收到聊天消息:', msg)
+// Handle Enter key in input
+const handleKeyPress = (event) => {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault()
+    sendMessage()
+  }
+}
+
+// Add new message to the messages array
+const addNewMessage = (content, senderName, isFromSelf = false) => {
+  const newMessage = {
+    id: `${Date.now()}-${senderName}`, // Unique ID using timestamp
+    content: content,
+    sender_name: senderName,
+    datetime: new Date().toISOString(),
+    type: isFromSelf ? 'self' : 'other'
+  }
+  
+  messages.value.push(newMessage)
+  debugLog.log('New message added to chat:', newMessage)
+}
+
+// 监听聊天消息事件（处理接收到的消息）
+function handleChatMessage(data) {
+  debugLog.log('Received chat message via eventBus:', data)
+  
+  // Handle private messages
+  if (data.type === 'private' || data.content) {
+    const senderName = data.sender_name || 'Unknown'
+    const content = data.content || data.message || ''
+    
+    // Determine if this message is from the current user
+    const isFromSelf = data.sender_id === userStore.userId || senderName === userStore.userName
+    
+    debugLog.log('Adding received message:', {
+      content,
+      senderName,
+      isFromSelf,
+      currentUserName: userStore.userName,
+      currentUserId: userStore.userId,
+      senderUserId: data.sender_id
+    })
+    
+    addNewMessage(content, senderName, isFromSelf)
+  }
 }
 
 onMounted(() => {
   eventBus.on('chat:message', handleChatMessage)
+  eventBus.on('chat:private_message', handleChatMessage) // Listen for private messages specifically
   loadChatHistory()
+  
+  // Initialize WebSocket client
+  debugLog.log('Initializing WebSocket client in Chatroom...')
+  messageClient.value = WebSocketClient.getInstance()
+  
+  if (!messageClient.value) {
+    debugLog.error('WebSocket client not available. Please ensure it was initialized in Loading page.')
+    toast.value?.show('Chat connection not available. Please refresh the page.', 'error')
+  } else {
+    debugLog.log('WebSocket client found:', {
+      isReady: messageClient.value.isReady(),
+      connectionState: messageClient.value.getConnectionState()
+    })
+  }
 })
 onUnmounted(() => {
   eventBus.off('chat:message', handleChatMessage)
+  eventBus.off('chat:private_message', handleChatMessage)
 })
 
 // Like/Unlike按钮点击逻辑
@@ -269,43 +460,7 @@ function closeChat() {
   flex-direction: column;
   gap: 8px;
 }
-.message {
-  background: #ff6b81;
-  color: #fff;
-  border-radius: 16px;
-  padding: 12px 16px;
-  max-width: 280px;
-  align-self: flex-end;
-  word-wrap: break-word;
-  line-height: 1.4;
-  margin-bottom: 8px;
-}
 
-.message.other {
-  background: #e9ecef;
-  color: #333;
-  align-self: flex-start;
-}
-
-.message-content {
-  margin-bottom: 4px;
-}
-
-.message-time {
-  font-size: 0.75rem;
-  opacity: 0.7;
-  text-align: right;
-}
-
-.message.other .message-time {
-  text-align: left;
-}
-
-@media (min-width: 768px) {
-  .message {
-    max-width: 300px;
-  }
-}
 .chat-input-bar {
   display: flex;
   align-items: center;
@@ -328,6 +483,13 @@ function closeChat() {
 .chat-input-bar input:focus {
   border-color: #007bff;
 }
+
+.chat-input-bar input:disabled {
+  background-color: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+}
+
 .send-btn {
   background: #007bff;
   color: #fff;
@@ -343,7 +505,12 @@ function closeChat() {
   transition: background-color 0.3s;
 }
 
-.send-btn:hover {
+.send-btn:hover:not(:disabled) {
   background: #0056b3;
+}
+
+.send-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
 }
 </style> 
