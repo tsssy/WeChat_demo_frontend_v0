@@ -115,25 +115,10 @@ const loadMatchData = async () => {
       // Fetch match information from API
       const matchResponse = await APIServices.getMatchInfo({ user_id: current_user_id, match_id: current_match_id })
       
-      // TODO: 临时修复 - 调换description字段，因为API返回的内容是反的
-      // 需要获取对方对我的描述，而不是我对对方的描述
-      let correctedDescription = matchResponse.description_for_target
-      try {
-        // 获取反向的match信息来得到正确的description
-        const reverseMatchInfo = await APIServices.getMatchInfo({ 
-          user_id: matchResponse.target_user_id, 
-          match_id: current_match_id 
-        })
-        correctedDescription = reverseMatchInfo.description_for_target || matchResponse.description_for_target
-        debugLog.log('Description corrected:', { original: matchResponse.description_for_target, corrected: correctedDescription })
-      } catch (e) {
-        console.warn(`无法获取反向description，使用原始值:`, e)
-      }
-      
-      // 使用修正后的description
+      // 直接使用API返回的description_for_target，无需反向修正
       matchInfo.value = {
         ...matchResponse,
-        description_for_target: correctedDescription
+        description_for_target: matchResponse.description_for_target // 直接使用API原始顺序
       }
       debugLog.log('Match info fetched:', matchInfo.value)
       
