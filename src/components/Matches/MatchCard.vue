@@ -6,63 +6,108 @@
     <!-- 红点通知 -->
     <div v-if="hasUnreadMessage" class="red-dot"></div>
     
-    <div class="match-avatar">
-      <div class="avatar-placeholder">
-        {{ getInitials(telegramId) }}
+    <!-- 左侧：匹配分数圆圈 -->
+    <div class="score-circle">
+      <div class="score-text">
+        {{ matchData.match_score || '?' }}
       </div>
     </div>
     
-    <div class="match-info">
-      <div class="match-name">
-        User {{ telegramId }}
+    <!-- 右侧：用户信息 -->
+    <div class="user-info">
+      <!-- 用户名 -->
+      <div class="user-name">
+        {{ userData.telegram_user_name || `User ${matchData.target_user_id}` }}
       </div>
-      <div class="match-preview">
-        <span class="match-status">💬 Start chatting</span>
+      
+      <!-- Match页面（未喜欢）显示描述 -->
+      <div v-if="!matchData.is_liked" class="user-description">
+        {{ matchData.description_for_target || '暂无描述' }}
+      </div>
+      
+      <!-- Mate页面（已喜欢）显示状态 -->
+      <div v-else class="mate-status">
+        💕 已喜欢
       </div>
     </div>
     
-    <div class="match-actions">
-      <div class="chat-icon">💬</div>
+    <!-- 箭头 -->
+    <div class="match-arrow">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
     </div>
   </div>
 </template>
 
 <script>
 import { matchCardManager } from '@/utils/matchCardManager.js'
+import { APIServices } from '@/services/APIServices.js'
 
 export default {
   name: 'MatchCard',
   props: {
+    // 保持向后兼容性，优先使用matchData
     telegramId: {
       type: [String, Number],
-      required: true
+      required: false
+    },
+    // 新的match数据对象
+    matchData: {
+      type: Object,
+      required: true,
+      default: () => ({})
     }
   },
   data() {
     return {
-      hasUnreadMessage: false
+      hasUnreadMessage: false,
+      userData: {}, // 存储用户信息
+      isLoading: true
     }
   },
-  mounted() {
+  computed: {
+    // 获取用户ID
+    userId() {
+      return this.matchData.target_user_id || this.telegramId
+    }
+  },
+  async mounted() {
     // 向全局管理器注册当前实例
-    matchCardManager.register(this.telegramId.toString(), this)
+    matchCardManager.register(this.userId.toString(), this)
+    
+    // 获取用户信息
+    await this.fetchUserInfo()
   },
   unmounted() {
     // 从全局管理器注销当前实例
-    matchCardManager.unregister(this.telegramId.toString())
+    matchCardManager.unregister(this.userId.toString())
   },
   methods: {
-    // 从telegram ID生成用户头像的缩写
-    getInitials(telegramId) {
-      const idStr = telegramId.toString()
-      return idStr.slice(-2).toUpperCase()
+    // 获取用户信息
+    async fetchUserInfo() {
+      try {
+        this.isLoading = true
+        const userInfo = await APIServices.getUserInfoWithUserId({ 
+          user_id: this.userId 
+        })
+        this.userData = userInfo
+        console.log(`获取用户 ${this.userId} 信息成功:`, userInfo)
+      } catch (error) {
+        console.error(`获取用户 ${this.userId} 信息失败:`, error)
+        this.userData = {
+          telegram_user_name: `User ${this.userId}`
+        }
+      } finally {
+        this.isLoading = false
+      }
     },
     
     // 处理卡片点击事件
     handleCardClick() {
       // 通过管理器清除红点状态（确保持久化状态也被清除）
-      matchCardManager.hideRedDotForUser(this.telegramId.toString())
-      this.$emit('card-click', this.telegramId)
+      matchCardManager.hideRedDotForUser(this.userId.toString())
+      this.$emit('card-click', this.userId)
     },
     
     // 显示红点（由管理器调用）
@@ -79,82 +124,84 @@ export default {
 </script>
 
 <style scoped>
+/* 卡片主体样式 - 简化版 */
 .match-card {
-  background: #1a1a1a;
-  border: 1px solid #333;
+  background: #ffffff;
+  border: 1px solid #e9ecef;
   border-radius: 16px;
   padding: 16px;
-  display: flex;
-  align-items: center;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
   gap: 16px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  margin-bottom: 12px;
+  position: relative;
 }
 
 .match-card:hover {
-  background: #2a2a2a;
   border-color: #fa86a4;
   transform: translateY(-2px);
 }
 
-.match-card:active {
-  transform: translateY(0);
-}
-
-.match-avatar {
-  width: 50px;
-  height: 50px;
+/* 左侧：匹配分数圆圈 */
+.score-circle {
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.avatar-placeholder {
-  width: 100%;
-  height: 100%;
   background: linear-gradient(135deg, #fa86a4, #e75a7c);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+}
+
+.score-text {
+  font-size: 18px;
   font-weight: 700;
-  font-size: 16px;
   color: white;
 }
 
-.match-info {
+/* 中间：用户信息区域 */
+.user-info {
   flex: 1;
   min-width: 0;
 }
 
-.match-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: white;
+.user-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2c3e50;
   margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.match-preview {
+.user-description {
   font-size: 14px;
-  color: #999;
+  color: #6c757d;
+  word-wrap: break-word;
 }
 
-.match-status {
-  color: #fa86a4;
-  font-weight: 500;
+.mate-status {
+  font-size: 14px;
+  color: #28a745;
+  font-weight: 600;
+  background: rgba(40, 167, 69, 0.1);
+  padding: 4px 8px;
+  border-radius: 8px;
+  display: inline-block;
 }
 
-.match-actions {
+/* 右侧：箭头 */
+.match-arrow {
+  color: #adb5bd;
   flex-shrink: 0;
 }
 
-.chat-icon {
-  font-size: 20px;
-  opacity: 0.7;
-  transition: opacity 0.3s ease;
-}
-
-.match-card:hover .chat-icon {
-  opacity: 1;
+.match-card:hover .match-arrow {
+  color: #fa86a4;
 }
 
 /* 红点样式 */
@@ -166,51 +213,32 @@ export default {
   height: 12px;
   background: #ff4757;
   border-radius: 50%;
-  border: 2px solid #1a1a1a;
+  border: 2px solid #ffffff;
   z-index: 10;
-  animation: pulse 2s infinite;
 }
 
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 0.8;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* 移动端优化 */
+/* 移动端简化 */
 @media (max-width: 480px) {
   .match-card {
     padding: 12px;
     gap: 12px;
   }
   
-  .match-avatar {
-    width: 44px;
-    height: 44px;
+  .score-circle {
+    width: 50px;
+    height: 50px;
   }
   
-  .avatar-placeholder {
-    font-size: 14px;
+  .score-text {
+    font-size: 16px;
   }
   
-  .match-name {
-    font-size: 15px;
+  .user-name {
+    font-size: 16px;
   }
   
-  .red-dot {
-    top: 6px;
-    right: 6px;
-    width: 10px;
-    height: 10px;
+  .user-description {
+    font-size: 13px;
   }
 }
 </style> 

@@ -7,7 +7,7 @@
       <MatchCard
         v-for="match in likedMatches"
         :key="match.match_id"
-        :telegramId="match.target_user_id"
+        :matchData="match"
         @card-click="goToWhyHim(match)"
       />
       <div v-if="isLoading" class="loading">加载中...</div>
