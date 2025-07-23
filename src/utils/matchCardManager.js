@@ -1,5 +1,6 @@
 // MatchCard全局管理器
 // 用于实现"暴力"方法：直接轮询所有MatchCard实例来更新红点状态
+import eventBus from './eventBus.js'
 
 class MatchCardManager {
   constructor() {
@@ -110,12 +111,13 @@ class MatchCardManager {
    * 处理WebSocket消息，执行"暴力轮询"逻辑
    * @param {Object} messageData - WebSocket消息数据
    */
-  handleWebSocketMessage(messageData) {
+  async handleWebSocketMessage(messageData) {
     console.log('MatchCardManager处理WebSocket消息:', messageData)
 
     // 只处理private_message类型的消息
     if (messageData.type === 'private_message' || messageData.type === 'private') {
       const senderId = messageData.sender_id || messageData.from
+      const matchId = messageData.match_id
       
       if (senderId) {
         // 直接轮询：为发送者显示红点
@@ -126,9 +128,107 @@ class MatchCardManager {
         } else {
           console.log(`无法为发送者 ${senderId} 显示红点 - 可能该用户的MatchCard不在当前页面`)
         }
+
+        // 检查match的is_liked状态，并触发相应的通知
+        if (matchId) {
+          try {
+            await this.checkMatchLikedStatusAndNotify(senderId.toString(), matchId, messageData)
+          } catch (error) {
+            console.error('检查match liked状态时出错:', error)
+          }
+        }
       } else {
         console.log('消息中没有找到sender_id或from字段')
       }
+    }
+  }
+
+  /**
+   * 检查match的is_liked状态并触发相应通知
+   * @param {string} senderId - 发送者ID
+   * @param {string} matchId - 匹配ID
+   * @param {Object} messageData - 消息数据
+   */
+  async checkMatchLikedStatusAndNotify(senderId, matchId, messageData) {
+    try {
+      // 动态导入APIServices和获取userStore
+      const { APIServices } = await import('../services/APIServices.js')
+      const { useUserStore } = await import('../stores/user.js')
+      const userStore = useUserStore()
+      
+      const user_id = userStore.user_id
+      
+      if (user_id) {
+        const matchInfo = await APIServices.getMatchInfo({ user_id, match_id: matchId })
+        
+        if (matchInfo.is_liked === true) {
+          console.log(`来自已喜欢用户 ${senderId} 的消息，触发特殊通知`)
+          
+          // 触发Mates按钮红点
+          this.triggerMatesButtonRedDot()
+          
+          // 显示Toast通知
+          this.showLikedMatchToast(senderId, messageData.content)
+          
+          // 播放提示音
+          this.playNotificationSound()
+        }
+      }
+    } catch (error) {
+      console.error('获取match信息失败:', error)
+    }
+  }
+
+  /**
+   * 触发Mates按钮红点
+   */
+  triggerMatesButtonRedDot() {
+    // 通过eventBus通知导航栏显示红点
+    eventBus.emit('show-mates-red-dot')
+    console.log('已触发Mates按钮红点')
+  }
+
+  /**
+   * 显示liked match的Toast通知
+   * @param {string} senderId - 发送者ID
+   * @param {string} content - 消息内容
+   */
+  showLikedMatchToast(senderId, content) {
+    // 通过eventBus通知显示Toast
+    eventBus.emit('show-liked-match-toast', {
+      senderId,
+      content: content || '收到新消息',
+      message: `💕 ${senderId} 发来消息: ${content || '收到新消息'}`
+    })
+    console.log(`已显示来自 ${senderId} 的Toast通知`)
+  }
+
+  /**
+   * 播放通知提示音
+   */
+  playNotificationSound() {
+    try {
+      // 创建简单的提示音
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+      
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+      
+      // 设置音频参数
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime) // 800Hz频率
+      oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1) // 降到600Hz
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
+      
+      oscillator.start(audioContext.currentTime)
+      oscillator.stop(audioContext.currentTime + 0.3)
+      
+      console.log('已播放通知提示音')
+    } catch (error) {
+      console.error('播放提示音失败:', error)
     }
   }
 

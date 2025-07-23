@@ -7,7 +7,11 @@
     </div>
     <!-- Mate Tab -->
     <div class="nav-item" :class="{ active: activeTab === 'mate' }" @click="navigateTo('mate')">
-      <div class="nav-icon">❤️</div>
+      <div class="nav-icon-container">
+        <div class="nav-icon">❤️</div>
+        <!-- Mates按钮红点 -->
+        <div v-if="hasMatesRedDot" class="mates-red-dot"></div>
+      </div>
       <div class="nav-label">Mates</div>
     </div>
     <!-- Profile Tab -->
@@ -21,9 +25,12 @@
 <script setup>
 // 引入路由
 import { useRoute, useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted } from 'vue'
+import eventBus from '@/utils/eventBus.js'
 
 const router = useRouter()
 const route = useRoute()
+const hasMatesRedDot = ref(false)
 
 // 计算当前激活tab
 const activeTab = (() => {
@@ -34,6 +41,11 @@ const activeTab = (() => {
 
 // 跳转到对应tab页面
 function navigateTo(tab) {
+  // 如果点击的是Mates按钮，清除红点
+  if (tab === 'mate') {
+    hasMatesRedDot.value = false
+  }
+  
   switch (tab) {
     case 'match':
       router.push('/match')
@@ -46,6 +58,30 @@ function navigateTo(tab) {
       break
   }
 }
+
+// 显示Mates按钮红点
+function showMatesRedDot() {
+  hasMatesRedDot.value = true
+  console.log('Mates按钮显示红点')
+}
+
+// 隐藏Mates按钮红点
+function hideMatesRedDot() {
+  hasMatesRedDot.value = false
+  console.log('Mates按钮隐藏红点')
+}
+
+onMounted(() => {
+  // 监听Mates红点事件
+  eventBus.on('show-mates-red-dot', showMatesRedDot)
+  eventBus.on('hide-mates-red-dot', hideMatesRedDot)
+})
+
+onUnmounted(() => {
+  // 清理事件监听
+  eventBus.off('show-mates-red-dot', showMatesRedDot)
+  eventBus.off('hide-mates-red-dot', hideMatesRedDot)
+})
 </script>
 
 <style scoped>
@@ -104,4 +140,38 @@ function navigateTo(tab) {
     font-size: 22px;
   }
 }
+/* Mates按钮红点样式 */
+.nav-icon-container {
+  position: relative;
+  display: inline-block;
+}
+
+.mates-red-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  background: #ff4757;
+  border-radius: 50%;
+  border: 1px solid #fff;
+  z-index: 10;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 </style>
