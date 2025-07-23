@@ -24,7 +24,7 @@
       <button @click="ensureWebSocketAndLoadHistory" class="retry-btn">Retry</button>
     </div>
     <!-- Chat messages -->
-    <div v-else class="chat-messages">
+    <div v-else class="chat-messages" ref="chatMessagesContainer">
       <!-- Show placeholder if no messages -->
       <div v-if="messages.length === 0" class="no-messages">
         <p>No messages yet. Start the conversation!</p>
@@ -35,7 +35,10 @@
         :key="message.id"
         :message="message.content"
         :message-type="message.type"
+        :sender-name="message.sender_name"
       />
+      <!-- 滚动锚点，保证每次新消息后都能滚动到底部 -->
+      <div ref="bottomAnchor"></div>
     </div>
     
     <div class="chat-input-bar">
@@ -61,7 +64,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user.js'
 import { APIServices } from '../services/APIServices.js'
@@ -87,6 +90,20 @@ const wsConnecting = ref(false) // WebSocket 连接中状态
 
 // WebSocket client
 const messageClient = ref(null)
+
+// 聊天消息容器ref
+const chatMessagesContainer = ref(null)
+// 滚动锚点ref
+const bottomAnchor = ref(null)
+
+// 监听messages变化，自动滚动到底部锚点
+watch(messages, async () => {
+  await nextTick() // 等待DOM更新
+  // 中文注释：每次消息变化后滚动到底部锚点
+  if (bottomAnchor.value) {
+    bottomAnchor.value.scrollIntoView({ behavior: 'auto' })
+  }
+})
 
 // Load chat history using get_chat_history API call
 const loadChatHistory = async () => {
@@ -320,6 +337,15 @@ function handleChatMessage(data) {
   addNewMessage(content, senderName, isFromSelf)
   // 中文调试日志：messages 当前内容
   console.log('handleChatMessage: messages 当前内容', messages.value)
+  // 新增：每次添加新消息后，自动滚动到底部锚点
+  nextTick(() => {
+    if (bottomAnchor.value) {
+      console.log('handleChatMessage: 滚动到底部锚点', bottomAnchor.value)
+      bottomAnchor.value.scrollIntoView({ behavior: 'auto' })
+    } else {
+      console.log('handleChatMessage: bottomAnchor is null')
+    }
+  })
 }
 
 // 获取当前用户ID，优先从store，其次从session，只用user_id字段
