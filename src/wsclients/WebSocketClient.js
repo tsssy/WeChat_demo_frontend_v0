@@ -135,11 +135,12 @@ class WebSocketClient extends BaseWebSocketClient {
       case 'private_chat_progress':
         this.handlePrivateChatProgress(data)
         break
-        
       case 'private':
         this.handlePrivateMessage(data)
         break
-        
+      case 'private_message': // 兼容后端发来的 private_message 类型，和 private 一样处理
+        this.handlePrivateMessage(data)
+        break
       case 'broadcast':
         this.handleBroadcastMessage(data)
         break

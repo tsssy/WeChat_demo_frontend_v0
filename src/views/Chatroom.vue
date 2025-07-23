@@ -298,7 +298,9 @@ const addNewMessage = (content, senderName, isFromSelf = false) => {
 
 // 监听聊天消息事件（处理接收到的消息）
 function handleChatMessage(data) {
-  debugLog.log('Received chat message via eventBus:', data)
+  // 中文调试日志：收到消息
+  console.log('handleChatMessage 收到消息:', data)
+  debugLog.log('handleChatMessage 收到消息:', data)
   // 只显示private/private_message类型，其它类型只console显示
   if (!data || (data.type !== 'private' && data.type !== 'private_message')) {
     debugLog.log('内部消息类型，仅console显示:', data)
@@ -313,15 +315,11 @@ function handleChatMessage(data) {
   const senderName = data.sender_name || 'Unknown'
   const content = data.content || data.message || ''
   const isFromSelf = false
-  debugLog.log('Adding received message:', {
-    content,
-    senderName,
-    isFromSelf,
-    currentUserName: userStore.user_name,
-    currentUserId: userStore.user_id,
-    senderUserId: data.sender_id
-  })
+  // 中文调试日志：准备添加新消息
+  console.log('handleChatMessage: 准备添加新消息', { content, senderName, isFromSelf })
   addNewMessage(content, senderName, isFromSelf)
+  // 中文调试日志：messages 当前内容
+  console.log('handleChatMessage: messages 当前内容', messages.value)
 }
 
 // 获取当前用户ID，优先从store，其次从session，只用user_id字段
@@ -401,15 +399,54 @@ const ensureWebSocketAndLoadHistory = async () => {
   loadChatHistory()
 }
 
-onMounted(() => {
-  eventBus.on('chat:message', handleChatMessage)
-  eventBus.on('chat:private_message', handleChatMessage)
-  // 先检查 WebSocket 连接，ready 后再加载历史
-  ensureWebSocketAndLoadHistory()
-})
-onUnmounted(() => {
+// 统一注销所有 eventBus 监听器
+function unregisterEventBusListeners() {
+  console.log('Chatroom.vue: 注销 eventBus 监听器')
   eventBus.off('chat:message', handleChatMessage)
   eventBus.off('chat:private_message', handleChatMessage)
+}
+
+// 统一注册所有 eventBus 监听器
+function registerEventBusListeners() {
+  console.log('Chatroom.vue: 注册 eventBus 监听器')
+  eventBus.on('chat:message', handleChatMessage)
+  eventBus.on('chat:private_message', handleChatMessage)
+}
+
+onMounted(async () => {
+  // 1. 先注销所有监听器，防止重复注册
+  unregisterEventBusListeners()
+  // 2. 重置 WebSocketClient 实例，确保是新连接
+  if (WebSocketClient.resetInstance) {
+    WebSocketClient.resetInstance()
+    console.log('Chatroom.vue: 已重置 WebSocketClient 实例')
+  }
+  // 3. 注册监听器
+  registerEventBusListeners()
+  // 4. 确保 chatroom_id 已同步
+  let currentChatroomId = userStore.chatroom_id
+  if (!currentChatroomId) {
+    const sessionMatch = sessionStorage.getItem('current_match')
+    if (sessionMatch) {
+      const matchData = JSON.parse(sessionMatch)
+      currentChatroomId = matchData.chatroom_id
+      if (currentChatroomId) {
+        userStore.chatroom_id = currentChatroomId
+        console.log('Chatroom.vue: chatroom_id 已从 sessionStorage 同步到 userStore', currentChatroomId)
+      }
+    }
+  }
+  // 5. 连接 WebSocket 并加载历史
+  await ensureWebSocketAndLoadHistory()
+})
+
+onUnmounted(() => {
+  // 注销监听器，重置 WebSocket
+  unregisterEventBusListeners()
+  if (WebSocketClient.resetInstance) {
+    WebSocketClient.resetInstance()
+    console.log('Chatroom.vue: 已重置 WebSocketClient 实例 (unmounted)')
+  }
 })
 
 // Like/Unlike按钮点击逻辑，调用toggle_like接口
