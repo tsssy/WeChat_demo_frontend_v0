@@ -3,6 +3,9 @@
     class="match-card"
     @click="handleCardClick"
   >
+    <!-- 红点通知 -->
+    <div v-if="hasUnreadMessage" class="red-dot"></div>
+    
     <div class="match-avatar">
       <div class="avatar-placeholder">
         {{ getInitials(telegramId) }}
@@ -25,6 +28,8 @@
 </template>
 
 <script>
+import { matchCardManager } from '@/utils/matchCardManager.js'
+
 export default {
   name: 'MatchCard',
   props: {
@@ -32,6 +37,19 @@ export default {
       type: [String, Number],
       required: true
     }
+  },
+  data() {
+    return {
+      hasUnreadMessage: false
+    }
+  },
+  mounted() {
+    // 向全局管理器注册当前实例
+    matchCardManager.register(this.telegramId.toString(), this)
+  },
+  unmounted() {
+    // 从全局管理器注销当前实例
+    matchCardManager.unregister(this.telegramId.toString())
   },
   methods: {
     // 从telegram ID生成用户头像的缩写
@@ -42,7 +60,19 @@ export default {
     
     // 处理卡片点击事件
     handleCardClick() {
+      // 通过管理器清除红点状态（确保持久化状态也被清除）
+      matchCardManager.hideRedDotForUser(this.telegramId.toString())
       this.$emit('card-click', this.telegramId)
+    },
+    
+    // 显示红点（由管理器调用）
+    showRedDot() {
+      this.hasUnreadMessage = true
+    },
+    
+    // 隐藏红点（由管理器调用）
+    hideRedDot() {
+      this.hasUnreadMessage = false
     }
   }
 }
@@ -127,6 +157,35 @@ export default {
   opacity: 1;
 }
 
+/* 红点样式 */
+.red-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 12px;
+  height: 12px;
+  background: #ff4757;
+  border-radius: 50%;
+  border: 2px solid #1a1a1a;
+  z-index: 10;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 /* 移动端优化 */
 @media (max-width: 480px) {
   .match-card {
@@ -145,6 +204,13 @@ export default {
   
   .match-name {
     font-size: 15px;
+  }
+  
+  .red-dot {
+    top: 6px;
+    right: 6px;
+    width: 10px;
+    height: 10px;
   }
 }
 </style> 

@@ -25,6 +25,7 @@ import WebSocketClientSingleton from '../wsclients/WebSocketClient.js'
 import MatchCard from '../components/Matches/MatchCard.vue'
 import eventBus from '../utils/eventBus.js' // 引入全局事件总线
 import { getMessageWebSocketUrl } from '@/utils/config.js' // 引入全局WebSocket地址配置
+import { matchCardManager } from '@/utils/matchCardManager.js' // 引入MatchCard管理器
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -34,12 +35,18 @@ let wsClient = null
 
 // 跳转到WhyHim页面，传递match信息
 function goToWhyHim(match) {
+  // 清除对应用户的红点
+  matchCardManager.hideRedDotForUser(match.target_user_id.toString())
+  
   // 可根据需要将match信息存入store/session
   userStore.setCurrentMatch(match)
   router.push('/why-him')
 }
 // 跳转到Chatroom页面
 function goToChatroom(match) {
+  // 清除对应用户的红点
+  matchCardManager.hideRedDotForUser(match.target_user_id.toString())
+  
   userStore.setCurrentMatch(match)
   router.push('/chatroom')
 }
@@ -69,6 +76,10 @@ async function loadMatches() {
       wsClient = WebSocketClientSingleton.getInstance(getMessageWebSocketUrl(), user_id)
       wsClient.onMessage = (data) => {
         console.log('WebSocket 收到消息:', data) // 调试：打印所有收到的消息
+        
+        // 【暴力方法】直接轮询所有MatchCard实例
+        matchCardManager.handleWebSocketMessage(data)
+        
         // 这里可根据data类型判断是否需要刷新match
         if (data.type === 'match_update') {
           loadMatches()
@@ -121,6 +132,11 @@ onMounted(() => {
   // 监听'private_message'事件
   eventBus.on('private_message', onPrivateMessage)
   console.log('已注册 eventBus 的 private 和 private_message 事件监听') // 标注已注册
+  
+  // 调试：打印MatchCard管理器状态
+  setTimeout(() => {
+    matchCardManager.debugPrintAllInstances()
+  }, 1000)
 })
 
 onUnmounted(() => {
