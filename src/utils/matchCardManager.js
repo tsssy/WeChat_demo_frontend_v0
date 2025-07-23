@@ -168,7 +168,7 @@ class MatchCardManager {
           this.triggerMatesButtonRedDot()
           
           // 显示Toast通知
-          this.showLikedMatchToast(senderId, messageData.content)
+          await this.showLikedMatchToast(senderId, messageData.content)
           
           // 播放提示音
           this.playNotificationSound()
@@ -193,14 +193,32 @@ class MatchCardManager {
    * @param {string} senderId - 发送者ID
    * @param {string} content - 消息内容
    */
-  showLikedMatchToast(senderId, content) {
-    // 通过eventBus通知显示Toast
-    eventBus.emit('show-liked-match-toast', {
-      senderId,
-      content: content || '收到新消息',
-      message: `💕 ${senderId} 发来消息: ${content || '收到新消息'}`
-    })
-    console.log(`已显示来自 ${senderId} 的Toast通知`)
+  async showLikedMatchToast(senderId, content) {
+    try {
+      // 获取发送者的用户名
+      const { APIServices } = await import('../services/APIServices.js')
+      const senderInfo = await APIServices.getUserInfoWithUserId({ user_id: senderId })
+      const senderName = senderInfo.telegram_user_name || `User ${senderId}`
+      
+      // 通过eventBus通知显示Toast
+      eventBus.emit('show-liked-match-toast', {
+        senderId,
+        senderName,
+        content: content || '收到新消息',
+        message: `💕 ${senderName} 发来消息: ${content || '收到新消息'}`
+      })
+      console.log(`已显示来自 ${senderName} (${senderId}) 的Toast通知`)
+    } catch (error) {
+      console.error('获取发送者信息失败，使用ID显示:', error)
+      // 降级处理：如果获取用户名失败，还是显示ID
+      eventBus.emit('show-liked-match-toast', {
+        senderId,
+        senderName: `User ${senderId}`,
+        content: content || '收到新消息',
+        message: `💕 User ${senderId} 发来消息: ${content || '收到新消息'}`
+      })
+      console.log(`已显示来自 User ${senderId} 的Toast通知（降级处理）`)
+    }
   }
 
   /**
