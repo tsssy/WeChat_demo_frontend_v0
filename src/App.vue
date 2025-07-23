@@ -12,8 +12,8 @@ const userStore = useUserStore()
 
 // 计算是否显示底部导航栏
 const showBottomNav = computed(() => {
-  // Loading 和 WhyHim 页面不显示底部导航栏
-  return route.name !== 'Loading' && route.name !== 'WhyHim'
+  // Loading, WhyHim 和 Chatroom 页面不显示底部导航栏
+  return route.name !== 'Loading' && route.name !== 'WhyHim' && route.name !== 'Chatroom'
 })
 
 // 在应用启动时初始化用户

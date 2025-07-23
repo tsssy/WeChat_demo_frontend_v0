@@ -53,12 +53,17 @@ import { useUserStore } from '../stores/user.js'
 import eventBus from '../utils/eventBus.js'
 import { debugLog, devHelpers } from '../utils/debug.js'
 import ManualMatchClient from '../wsclients/ManualMatchClient.js'
+import WebSocketClient from '../wsclients/WebSocketClient.js'
 
 const router = useRouter()
 const userStore = useUserStore()
 
 // WebSocket客户端实例
 const matchClient = ref(null)
+const messageClient = ref(null)
+
+// Connection state tracking
+const messageClientReady = ref(false)
 
 // 动画状态
 const currentActiveIndex = ref(-1)
@@ -68,7 +73,7 @@ const pageStartTime = ref(null)
 
 // 重试逻辑状态
 const retryCount = ref(0)
-const maxRetries = ref(5)
+const maxRetries = ref(10) // 增加重试次数到10次
 const retryDelay = ref(3000) // 3秒重试间隔
 const isRetrying = ref(false)
 
@@ -84,7 +89,7 @@ const loadingMessages = ref([
 // 添加重试相关的消息
 const getRetryMessage = () => {
   if (isRetrying.value) {
-    return `Retrying match search... (${retryCount.value}/${maxRetries.value})`
+    return `Retrying match search... (${retryCount.value}/${maxRetries.value}) - Reconnecting to server`
   }
   return null
 }
@@ -93,6 +98,11 @@ const getRetryMessage = () => {
 const getWebSocketUrl = () => {
   // 始终使用生产环境URL
   return 'wss://lovetapoversea.xyz:4433/ws/match'
+}
+
+const getMessageWebSocketUrl = () => {
+  // 始终使用生产环境URL for message WebSocket
+  return 'wss://lovetapoversea.xyz:4433/ws/message'
 }
 
 // 开始思考过程动画
@@ -121,7 +131,7 @@ const startThinkingAnimation = () => {
   }, 1000)
 }
 
-// 重试匹配请求
+// 重试匹配请求（先断开再重连）
 const retryMatch = () => {
   if (retryCount.value >= maxRetries.value) {
     debugLog.error('已达到最大重试次数，停止重试')
@@ -134,39 +144,60 @@ const retryMatch = () => {
   
   debugLog.log(`开始第 ${retryCount.value} 次重试匹配请求...`)
   
+  // 先断开现有连接
+  if (matchClient.value) {
+    debugLog.websocket('断开现有匹配WebSocket连接以进行重试')
+    matchClient.value.disconnect()
+    matchClient.value = null
+  }
+  
   setTimeout(() => {
-    if (matchClient.value && matchClient.value.isReady()) {
-      matchClient.value.start_match()
-      debugLog.websocket(`第 ${retryCount.value} 次匹配请求已发送`)
-      isRetrying.value = false
-    } else {
-      debugLog.error('WebSocket连接未就绪，无法重试')
-      isRetrying.value = false
-    }
+    // 重新初始化匹配WebSocket连接
+    debugLog.websocket(`第 ${retryCount.value} 次重试：重新初始化匹配WebSocket连接`)
+    initializeMatchWebSocket()
+    
+    // 等待连接建立后发送匹配请求
+    setTimeout(() => {
+      if (matchClient.value && matchClient.value.isReady()) {
+        matchClient.value.start_match()
+        debugLog.websocket(`第 ${retryCount.value} 次匹配请求已发送`)
+        isRetrying.value = false
+      } else {
+        debugLog.error('重试后WebSocket连接未就绪，无法发送匹配请求')
+        isRetrying.value = false
+      }
+    }, 1000) // 等待1秒让连接建立
   }, retryDelay.value)
 }
 
-// 检查是否可以导航（30秒已过且收到匹配）
+// 检查是否可以导航（30秒已过且收到匹配且消息WebSocket已连接）
 const checkAndNavigate = () => {
   const now = Date.now()
   const elapsed = now - pageStartTime.value
   const minimumWait = 30000 // 30秒
   
-  debugLog.log(`检查导航条件: 已等待 ${elapsed}ms, 匹配已收到: ${matchReceived.value}`)
+  debugLog.log(`检查导航条件: 已等待 ${elapsed}ms, 匹配已收到: ${matchReceived.value}, 消息客户端就绪: ${messageClientReady.value}`)
   
-  if (elapsed >= minimumWait && matchReceived.value) {
-    debugLog.log('满足导航条件，显示最终消息')
+  if (elapsed >= minimumWait && matchReceived.value && messageClientReady.value) {
+    debugLog.log('满足所有导航条件：30秒等待✅ 匹配完成✅ 消息WebSocket就绪✅')
     showFinalMessage.value = true
     
     // 显示最终消息3秒后跳转
     setTimeout(() => {
-      debugLog.route('30秒等待完成，匹配完成，跳转到WhyHim页面')
+      debugLog.route('所有条件满足，跳转到WhyHim页面')
       router.push('/why-him')
     }, 3000)
-  } else if (matchReceived.value) {
-    // 如果匹配已收到但30秒未到，继续等待
+  } else if (matchReceived.value && messageClientReady.value) {
+    // 如果匹配已收到且消息客户端就绪但30秒未到，继续等待
     const remainingTime = minimumWait - elapsed
-    debugLog.log(`匹配已收到，但需再等待 ${remainingTime}ms`)
+    debugLog.log(`匹配和消息客户端均已就绪，但需再等待 ${remainingTime}ms 满足最小等待时间`)
+    setTimeout(checkAndNavigate, 1000)
+  } else {
+    // 如果条件不满足，检查缺少什么
+    const missing = []
+    if (!matchReceived.value) missing.push('匹配结果')
+    if (!messageClientReady.value) missing.push('消息WebSocket连接')
+    debugLog.log(`等待条件: ${missing.join(', ')}`)
     setTimeout(checkAndNavigate, 1000)
   }
 }
@@ -203,6 +234,42 @@ const initializeMatchWebSocket = () => {
   }
 }
 
+// 初始化消息WebSocket连接
+const initializeMessageWebSocket = async () => {
+  if (!userStore.userId) {
+    debugLog.error('用户未初始化，无法建立消息连接')
+    return
+  }
+
+  try {
+    devHelpers.time('消息WebSocket初始化')
+    
+    const wsUrl = getMessageWebSocketUrl()
+    debugLog.websocket('初始化消息WebSocket:', wsUrl)
+    debugLog.websocket('用户ID:', userStore.userId)
+    
+    // Try to get existing singleton instance first
+    messageClient.value = WebSocketClient.getInstance()
+    
+    if (!messageClient.value) {
+      // If singleton doesn't exist, create new instance
+      messageClient.value = WebSocketClient.getInstance(wsUrl, userStore.userId)
+    }
+    
+    if (messageClient.value) {
+      messageClient.value.connect()
+      debugLog.websocket('消息WebSocket连接已启动')
+    } else {
+      throw new Error('Failed to create message WebSocket client')
+    }
+    
+    devHelpers.timeEnd('消息WebSocket初始化')
+    
+  } catch (error) {
+    debugLog.error('消息WebSocket初始化失败:', error)
+  }
+}
+
 // 处理匹配成功事件
 function handleMatchSuccess(matchData) {
   debugLog.log('=== 匹配成功 ===')
@@ -219,7 +286,21 @@ function handleMatchSuccess(matchData) {
   
   // 标记匹配已收到
   matchReceived.value = true
-  debugLog.log('匹配结果已收到并存储，开始检查30秒等待条件')
+  debugLog.log('匹配结果已收到并存储')
+  
+  // 匹配成功后，先断开匹配WebSocket连接
+  debugLog.log('匹配成功，断开匹配WebSocket连接...')
+  if (matchClient.value) {
+    matchClient.value.disconnect()
+    matchClient.value = null
+    debugLog.websocket('匹配WebSocket连接已断开')
+  }
+  
+  // 然后初始化消息WebSocket连接
+  debugLog.log('开始建立消息WebSocket连接...')
+  setTimeout(() => {
+    initializeMessageWebSocket()
+  }, 500) // 等待500ms确保匹配连接完全断开
   
   // 检查是否可以导航
   checkAndNavigate()
@@ -296,6 +377,38 @@ function handleMatchAuthenticated(data) {
   debugLog.log('==================')
 }
 
+// 处理消息WebSocket事件
+function handleChatOpen(data) {
+  debugLog.log('=== 消息WebSocket连接已建立 ===')
+  debugLog.log('连接数据:', data)
+  debugLog.log('==================')
+}
+
+function handleChatClose(data) {
+  debugLog.log('=== 消息WebSocket连接已关闭 ===')
+  debugLog.log('关闭数据:', data)
+  messageClientReady.value = false
+  debugLog.log('==================')
+}
+
+function handleChatAuthenticated(data) {
+  debugLog.log('=== 消息客户端认证成功 ===')
+  debugLog.log('认证数据:', data)
+  messageClientReady.value = true
+  debugLog.log('消息WebSocket客户端已就绪')
+  debugLog.log('==================')
+  
+  // 检查是否可以导航
+  checkAndNavigate()
+}
+
+function handleChatError(data) {
+  debugLog.error('=== 消息WebSocket错误 ===')
+  debugLog.error('错误数据:', data)
+  messageClientReady.value = false
+  debugLog.error('==================')
+}
+
 onMounted(() => {
   debugLog.log('Loading页面挂载开始')
   
@@ -307,10 +420,11 @@ onMounted(() => {
   startThinkingAnimation()
   
   // 等待用户初始化完成后再建立WebSocket连接
-  const checkUserAndConnect = () => {
+  const checkUserAndConnect = async () => {
     if (userStore.hasUser && userStore.userId) {
       debugLog.log('用户已就绪，开始建立匹配连接')
       initializeMatchWebSocket()
+      // 不在此处初始化消息WebSocket，等收到匹配后再初始化
     } else {
       debugLog.log('等待用户初始化...')
       setTimeout(checkUserAndConnect, 500)
@@ -326,6 +440,12 @@ onMounted(() => {
   eventBus.on('match:open', handleMatchOpen)
   eventBus.on('match:close', handleMatchClose)
   eventBus.on('match:authenticated', handleMatchAuthenticated)
+  
+  // 设置消息WebSocket事件监听器
+  eventBus.on('chat:open', handleChatOpen)
+  eventBus.on('chat:close', handleChatClose)
+  eventBus.on('chat:authenticated', handleChatAuthenticated)
+  eventBus.on('chat:error', handleChatError)
   
   // 显示当前用户信息 (开发调试)
   debugLog.user('Loading页面挂载 - 当前用户ID:', userStore.userId)
@@ -349,11 +469,23 @@ onUnmounted(() => {
   eventBus.off('match:close', handleMatchClose)
   eventBus.off('match:authenticated', handleMatchAuthenticated)
   
+  // 清理消息WebSocket事件监听器
+  eventBus.off('chat:open', handleChatOpen)
+  eventBus.off('chat:close', handleChatClose)
+  eventBus.off('chat:authenticated', handleChatAuthenticated)
+  eventBus.off('chat:error', handleChatError)
+  
   // 关闭WebSocket连接
   if (matchClient.value) {
     matchClient.value.disconnect()
     matchClient.value = null
     debugLog.websocket('匹配WebSocket连接已清理')
+  }
+  
+  // 注意：不要关闭消息WebSocket连接，因为用户导航到聊天页面后还需要使用
+  // 消息WebSocket连接将在应用生命周期内保持活跃
+  if (messageClient.value) {
+    debugLog.websocket('消息WebSocket连接保持活跃，不在此页面关闭')
   }
   
   debugLog.log('Loading页面卸载完成')

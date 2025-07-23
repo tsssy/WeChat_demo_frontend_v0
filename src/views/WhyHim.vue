@@ -30,6 +30,9 @@
       <!-- Other matches link below the button -->
       <a href="#" class="other-matches-link" @click.prevent="goToMatch">Check out other matches</a>
     </div>
+    
+    <!-- Toast component -->
+    <Toast ref="toast" />
   </div>
 </template>
 
@@ -39,9 +42,13 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user.js'
 import { APIServices } from '../services/APIServices.js'
 import { debugLog } from '../utils/debug.js'
+import Toast from '../components/Toast.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
+
+// Toast component reference
+const toast = ref(null)
 
 // Reactive state
 const isLoading = ref(true)
@@ -145,8 +152,46 @@ const retryLoad = () => {
 }
 
 // Navigation functions
-const goToChatroom = () => {
-  router.push('/chatroom')
+const goToChatroom = async () => {
+  try {
+    const currentUserId = userStore.userId
+    const currentMatchId = userStore.currentMatchId
+    const currentTargetUserId = userStore.targetUserId
+    
+    if (!currentUserId || !currentMatchId || !currentTargetUserId) {
+      toast.value?.show('Missing required information for creating chatroom', 'error')
+      return
+    }
+    
+    debugLog.log('Creating/getting chatroom with:', {
+      user_id_1: currentUserId,
+      user_id_2: currentTargetUserId,
+      match_id: currentMatchId
+    })
+    
+    // Call get_or_create_chatroom API with correct parameter names
+    const chatroomResponse = await APIServices.getOrCreateChatroom({
+      user_id_1: currentUserId,
+      user_id_2: currentTargetUserId,
+      match_id: currentMatchId
+    })
+    
+    if (chatroomResponse.success && chatroomResponse.chatroom_id) {
+      debugLog.log('Chatroom created/retrieved successfully:', chatroomResponse.chatroom_id)
+      
+      // Store chatroom_id in user store or session
+      const updatedMatch = { ...userStore.currentMatch, chatroom_id: chatroomResponse.chatroom_id }
+      userStore.setCurrentMatch(updatedMatch)
+      
+      // Navigate to chatroom
+      router.push('/chatroom')
+    } else {
+      toast.value?.show('Failed to create chatroom', 'error')
+    }
+  } catch (error) {
+    debugLog.error('Error creating chatroom:', error)
+    toast.value?.show('Error connecting to chat. Please try again.', 'error')
+  }
 }
 
 const goToMatch = () => {
