@@ -18,9 +18,10 @@ class WebSocketClient extends BaseWebSocketClient {
    * @param {string} message - 消息内容
    * @param {number} target_user_id - 目标用户ID
    * @param {number} chatroom_id - 聊天室ID（可选）
+   * @param {number} match_id - 匹配ID（可选）
    * @returns {boolean} 发送是否成功
    */
-  send(message, target_user_id, chatroom_id = null) {
+  send(message, target_user_id, chatroom_id = null, match_id = null) {
     if (!this.isReady()) {
       debugLog.warn('WebSocketClient未就绪，消息发送失败')
       return false
@@ -36,6 +37,11 @@ class WebSocketClient extends BaseWebSocketClient {
     // 如果有聊天室ID，添加到消息中
     if (chatroom_id || this.chatroom_id) {
       messageData.chatroom_id = chatroom_id || this.chatroom_id
+    }
+
+    // 如果有匹配ID，添加到消息中
+    if (match_id) {
+      messageData.match_id = match_id
     }
 
     const messageStr = JSON.stringify(messageData)

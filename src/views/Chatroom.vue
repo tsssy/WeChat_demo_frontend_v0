@@ -206,30 +206,39 @@ const sendMessage = async () => {
     const currentUserId = userStore.user_id
     const currentTargetUserId = userStore.target_user_id
     let currentChatroomId = userStore.chatroom_id
+    let currentMatchId = userStore.current_match_id
     
     debugLog.log('Initial data from store:', {
       currentUserId,
       currentTargetUserId,
-      currentChatroomId
+      currentChatroomId,
+      currentMatchId
     })
     
-    // Try to get chatroom_id from session if not in store
-    if (!currentChatroomId) {
+    // Try to get data from session if not in store
+    if (!currentChatroomId || !currentMatchId) {
       const sessionMatch = sessionStorage.getItem('current_match')
-      debugLog.log('Trying to get chatroom_id from session:', sessionMatch)
+      debugLog.log('Trying to get data from session:', sessionMatch)
       if (sessionMatch) {
         const matchData = JSON.parse(sessionMatch)
-        currentChatroomId = matchData.chatroom_id
-        debugLog.log('Found chatroom_id in session:', currentChatroomId)
+        if (!currentChatroomId) {
+          currentChatroomId = matchData.chatroom_id
+          debugLog.log('Found chatroom_id in session:', currentChatroomId)
+        }
+        if (!currentMatchId) {
+          currentMatchId = matchData.match_id
+          debugLog.log('Found match_id in session:', currentMatchId)
+        }
       }
     }
     
     // Validate required data
-    if (!currentUserId || !currentTargetUserId || !currentChatroomId) {
+    if (!currentUserId || !currentTargetUserId || !currentChatroomId || !currentMatchId) {
       const missing = []
       if (!currentUserId) missing.push('currentUserId')
       if (!currentTargetUserId) missing.push('currentTargetUserId')
       if (!currentChatroomId) missing.push('currentChatroomId')
+      if (!currentMatchId) missing.push('currentMatchId')
       debugLog.error('Missing required data:', missing)
       throw new Error(`Missing required information: ${missing.join(', ')}`)
     }
@@ -257,23 +266,25 @@ const sendMessage = async () => {
     const messageData = {
       target_user_id: currentTargetUserId, // Keep as number, WebSocketClient handles conversion
       chatroom_id: currentChatroomId, // Keep as number
+      match_id: currentMatchId, // Add match_id
       content: messageInput.value.trim() // Keep as string
     }
     
     debugLog.log('Sending message via WebSocket:', messageData)
     
-    // Send message via WebSocket
+    // Send message via WebSocket (now includes match_id)
     const success = messageClient.value.send(
       messageData.content,
       messageData.target_user_id,
-      messageData.chatroom_id
+      messageData.chatroom_id,
+      messageData.match_id
     )
     
     debugLog.log('WebSocket send result:', success)
     
     if (success) {
-      // Add the sent message to UI immediately
-      addNewMessage(messageData.content, userStore.user_name || 'You', true)
+      // Add the sent message to UI immediately (include match_id)
+      addNewMessage(messageData.content, userStore.user_name || 'You', true, messageData.match_id)
       // 新增：发送后自动滚动到底部锚点
       nextTick(() => {
         if (bottomAnchor.value) {
@@ -308,13 +319,14 @@ const handleKeyPress = (event) => {
 }
 
 // Add new message to the messages array
-const addNewMessage = (content, senderName, isFromSelf = false) => {
+const addNewMessage = (content, senderName, isFromSelf = false, match_id = null) => {
   const newMessage = {
     id: `${Date.now()}-${senderName}`, // Unique ID using timestamp
     content: content,
     sender_name: senderName,
     datetime: new Date().toISOString(),
-    type: isFromSelf ? 'self' : 'other'
+    type: isFromSelf ? 'self' : 'other',
+    match_id: match_id // Add match_id to message
   }
   
   messages.value.push(newMessage)
@@ -331,18 +343,31 @@ function handleChatMessage(data) {
     debugLog.log('内部消息类型，仅console显示:', data)
     return
   }
-  // 只显示当前聊天chatroom_id的消息
+  
+  // 检查chatroom_id和match_id
   const currentChatroomId = userStore.chatroom_id || (sessionStorage.getItem('current_match') ? JSON.parse(sessionStorage.getItem('current_match')).chatroom_id : null)
+  const currentMatchId = userStore.current_match_id || (sessionStorage.getItem('current_match') ? JSON.parse(sessionStorage.getItem('current_match')).match_id : null)
+  
+  // 过滤非当前chatroom的消息
   if (!currentChatroomId || data.chatroom_id != currentChatroomId) {
     debugLog.log('忽略非当前chatroom_id的消息:', data)
     return
   }
+  
+  // 过滤非当前match的消息（如果消息包含match_id的话）
+  if (data.match_id && currentMatchId && data.match_id != currentMatchId) {
+    debugLog.log('忽略非当前match_id的消息:', data)
+    return
+  }
+  
   const senderName = data.sender_name || 'Unknown'
   const content = data.content || data.message || ''
   const isFromSelf = false
+  const messageMatchId = data.match_id || null
+  
   // 中文调试日志：准备添加新消息
-  console.log('handleChatMessage: 准备添加新消息', { content, senderName, isFromSelf })
-  addNewMessage(content, senderName, isFromSelf)
+  console.log('handleChatMessage: 准备添加新消息', { content, senderName, isFromSelf, messageMatchId })
+  addNewMessage(content, senderName, isFromSelf, messageMatchId)
   // 中文调试日志：messages 当前内容
   console.log('handleChatMessage: messages 当前内容', messages.value)
   // 新增：每次添加新消息后，自动滚动到底部锚点
