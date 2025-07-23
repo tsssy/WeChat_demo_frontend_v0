@@ -63,8 +63,9 @@ const targetUserDisplayName = computed(() => {
 })
 
 const targetGenderPronoun = computed(() => {
+  // 1为女性，2为男性
   const gender = targetUserInfo.value?.gender || 1
-  return gender === 2 ? 'her' : 'him'
+  return gender === 1 ? 'her' : 'him' // 1为女用her，2为男用him
 })
 
 const matchDescription = computed(() => {
@@ -72,8 +73,9 @@ const matchDescription = computed(() => {
 })
 
 const defaultDescription = computed(() => {
+  // 1为女性，2为男性
   const gender = targetUserInfo.value?.gender || 1
-  const pronoun = gender === 2 ? 'She' : 'He'
+  const pronoun = gender === 1 ? 'She' : 'He' // 1为女用She，2为男用He
   return `${pronoun} deeply values emotional honesty and is serious about building a meaningful relationship. Just like you, ${pronoun.toLowerCase()} has been hurt by loved ones in the past. You two share a desire for stability and mutual growth.`
 })
 

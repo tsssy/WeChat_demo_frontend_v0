@@ -63,12 +63,13 @@ const error = ref(null)
 
 // 获取性别文本
 const getGenderText = (gender) => {
+  // 1为女性，2为男性，3为其他
   if (!gender) return 'N/A'
   switch (gender) {
-    case 1: return 'Male'
-    case 2: return 'Female'  
-    case 3: return 'Other'
-    default: return 'Unknown'
+    case 1: return 'Female' // 女
+    case 2: return 'Male'   // 男
+    case 3: return 'Other'  // 其他
+    default: return 'Unknown' // 未知
   }
 }
 
