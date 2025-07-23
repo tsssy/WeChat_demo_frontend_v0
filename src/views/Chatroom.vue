@@ -382,10 +382,12 @@ function getCurrentUserId() {
   return user_id
 }
 
+import { getMessageWebSocketUrl } from '@/utils/config.js'
+
 // 带重试的WebSocket连接函数，始终传递user_id
 async function connectWebSocketWithRetry(maxRetries = 10, delayMs = 500) {
   let attempt = 0
-  const wsUrl = 'wss://lovetapoversea.xyz:4433/ws/message'
+  const wsUrl = getMessageWebSocketUrl()
   const user_id = getCurrentUserId()
   if (!user_id) {
     debugLog.error('无法获取有效user_id，WebSocket连接中止')

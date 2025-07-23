@@ -1,12 +1,10 @@
 // Test script for /ws/match WebSocket handler
 console.log('Testing /ws/match WebSocket connection...');
 
-// 引入统一管理的URL配置
-// 注意：浏览器环境下需确保url_config.js已在HTML中通过<script>标签引入
-const WS_BASE_URL = 'https://lovetapoversea.xyz:4433'; // 示例：实际应用中应从url_config.js获取
-const API_BASE_URL = 'https://lovetapoversea.xyz:4433'; // 示例：实际应用中应从url_config.js获取
+// 导入统一URL配置
+import { getMatchWebSocketUrl } from './src/utils/config.js'
 
-const matchWs = new WebSocket(`${WS_BASE_URL}/ws/match`); // 使用统一配置
+const matchWs = new WebSocket(getMatchWebSocketUrl()); // 使用统一配置
 
 matchWs.onopen = function() {
     console.log('✅ Connected to /ws/match');

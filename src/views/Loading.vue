@@ -94,16 +94,8 @@ const getRetryMessage = () => {
   return null
 }
 
-// WebSocket配置
-const getWebSocketUrl = () => {
-  // 始终使用生产环境URL
-  return 'wss://lovetapoversea.xyz:4433/ws/match'
-}
-
-const getMessageWebSocketUrl = () => {
-  // 始终使用生产环境URL for message WebSocket
-  return 'wss://lovetapoversea.xyz:4433/ws/message'
-}
+// WebSocket配置 - 使用统一配置管理
+import { getMatchWebSocketUrl, getMessageWebSocketUrl } from '@/utils/config.js'
 
 // 开始思考过程动画
 const startThinkingAnimation = () => {
@@ -212,7 +204,7 @@ const initializeMatchWebSocket = () => {
   try {
     devHelpers.time('匹配WebSocket初始化')
     
-    const wsUrl = getWebSocketUrl()
+    const wsUrl = getMatchWebSocketUrl()
     debugLog.websocket('初始化匹配WebSocket:', wsUrl)
     debugLog.websocket('用户ID:', userStore.user_id)
     

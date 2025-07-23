@@ -1,9 +1,10 @@
 // Test script for /ws/base WebSocket handler
 console.log('Testing /ws/base WebSocket connection...');
 
-// 引入统一管理的URL配置
-// 注意：浏览器环境下需确保url_config.js已在HTML中通过<script>标签引入
-const baseWs = new WebSocket(`${WS_BASE_URL}/ws/base`); // 使用统一配置
+// 导入统一URL配置
+import { getBaseWebSocketUrl } from './src/utils/config.js'
+
+const baseWs = new WebSocket(getBaseWebSocketUrl()); // 使用统一配置
 
 baseWs.onopen = function() {
     console.log('✅ Connected to /ws/base');

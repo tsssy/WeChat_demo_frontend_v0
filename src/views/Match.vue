@@ -17,12 +17,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user.js'
 import { APIServices } from '../services/APIServices.js'
 import WebSocketClientSingleton from '../wsclients/WebSocketClient.js'
 import MatchCard from '../components/Matches/MatchCard.vue'
+import eventBus from '../utils/eventBus.js' // 引入全局事件总线
+import { getMessageWebSocketUrl } from '@/utils/config.js' // 引入全局WebSocket地址配置
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -63,15 +65,25 @@ async function loadMatches() {
 
     // 3. 连接WebSocket
     if (!wsClient) {
-      wsClient = WebSocketClientSingleton.getInstance('/ws/message', user_id)
-      // 监听websocket消息，实时刷新match
+      // 使用全局统一的WebSocket地址
+      wsClient = WebSocketClientSingleton.getInstance(getMessageWebSocketUrl(), user_id)
       wsClient.onMessage = (data) => {
+        console.log('WebSocket 收到消息:', data) // 调试：打印所有收到的消息
         // 这里可根据data类型判断是否需要刷新match
         if (data.type === 'match_update') {
           loadMatches()
         }
+        // 监听private类型消息
+        if (data.type === 'private') {
+          console.log('WebSocket 收到 private 消息:', data) // 调试日志
+        }
+        // 监听private_message类型消息
+        if (data.type === 'private_message') {
+          console.log('WebSocket 收到 private_message 消息:', data) // 调试日志
+        }
       }
       wsClient.connect()
+      console.log('已连接到 WebSocket /ws/message channel') // 标注已连接
     }
 
     // 4. 获取用户信息，拿到match_ids
@@ -104,7 +116,29 @@ async function loadMatches() {
 
 onMounted(() => {
   loadMatches()
+  // 监听'private'事件
+  eventBus.on('private', onPrivate)
+  // 监听'private_message'事件
+  eventBus.on('private_message', onPrivateMessage)
+  console.log('已注册 eventBus 的 private 和 private_message 事件监听') // 标注已注册
 })
+
+onUnmounted(() => {
+  // 页面卸载时移除eventBus监听，防止内存泄漏
+  eventBus.off('private', onPrivate)
+  eventBus.off('private_message', onPrivateMessage)
+})
+
+// 处理private事件
+function onPrivate(payload) {
+  console.log('收到 private 事件', payload)
+  // 可根据需要刷新数据
+}
+// 处理private_message事件
+function onPrivateMessage(payload) {
+  console.log('收到 private_message 事件', payload)
+  // 可根据需要刷新数据
+}
 </script>
 
 <style scoped>

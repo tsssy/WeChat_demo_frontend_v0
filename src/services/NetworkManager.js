@@ -5,9 +5,9 @@
 
 import { ref } from 'vue'
 import { debugLog } from '../utils/debug.js'
+import { getApiUrl } from '@/utils/config.js'
 
-// API 基础地址，可根据环境变量配置
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? '' : 'https://lovetapoversea.xyz:4433')
+// API 基础地址从统一配置获取
 const DEFAULT_TIMEOUT = 10000 // 默认超时时间 10 秒
 
 // 全局 loading 和 error 状态
@@ -83,7 +83,7 @@ async function makeRequest(endpoint, options = {}) {
       config = requestInterceptor(config)
     }
     // 拼接完整 URL
-    const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`
+    const url = endpoint.startsWith('http') ? endpoint : getApiUrl(endpoint)
     debugLog.log('🌐 [NetworkManager] 请求信息:', { method, url, headers: config.headers, body: config.body })
     // 发起请求
     const controller = new AbortController()

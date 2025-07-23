@@ -1,10 +1,10 @@
 // Test script for /ws/message WebSocket handler
 console.log('Testing /ws/message WebSocket connection...');
 
-// 引入统一管理的URL配置
-// 注意：浏览器环境下需确保url_config.js已在HTML中通过<script>标签引入
-const WS_BASE_URL = 'https://lovetapoversea.xyz:4433'; // 示例：假设API和WebSocket都在同一域名下
-const messageWs = new WebSocket(`${WS_BASE_URL}/ws/message`); // 使用统一配置
+// 导入统一URL配置
+import { getMessageWebSocketUrl } from './src/utils/config.js'
+
+const messageWs = new WebSocket(getMessageWebSocketUrl()); // 使用统一配置
 
 messageWs.onopen = function() {
     console.log('✅ Connected to /ws/message');

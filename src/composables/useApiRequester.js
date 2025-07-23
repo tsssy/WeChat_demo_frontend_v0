@@ -1,8 +1,8 @@
 import { ref, readonly } from 'vue'
 import { debugLog } from '../utils/debug.js'
+import { getApiUrl } from '@/utils/config.js'
 
-// Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? '' : 'https://lovetapoversea.xyz:4433')
+// Configuration从统一配置获取
 const DEFAULT_TIMEOUT = 10000 // 10 seconds
 
 // State
@@ -87,12 +87,11 @@ const makeRequest = async (endpoint, options = {}) => {
     }
 
     // Create URL
-    const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`
+    const url = endpoint.startsWith('http') ? endpoint : getApiUrl(endpoint)
     
     debugLog.log('🚀 makeRequest called with:')
     debugLog.log('  - Method:', method)
     debugLog.log('  - Endpoint:', endpoint)
-    debugLog.log('  - API_BASE_URL:', API_BASE_URL)
     debugLog.log('  - Full URL:', url)
     debugLog.log('  - Headers:', config.headers)
     debugLog.log('  - Body:', config.body)
