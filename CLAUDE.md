@@ -46,13 +46,17 @@ The Vite dev server proxies `/api/*` requests to `https://lovetapoversea.xyz:443
   - `/chatroom` → Chatroom
   - `/match` → Match
   - `/mate` → Mate
-  - `/profile` → Profile
+  - `/profile` → Profile (displays user information via `getUserInfoWithUserId` API)
 
 #### Service Layer
 - `src/services/APIServices.js` - Main API service layer
-- `src/services/api.js` - Core API utilities
+- `src/services/api.js` - Core API utilities  
 - `src/services/APISchemes.js` - API schema definitions
-- `src/utils/WebSocketClient.js` - WebSocket connection management
+- `src/services/NetworkManager.js` - HTTP request management with interceptors
+- `src/composables/useApiRequester.js` - API request composable
+- `src/utils/config.js` - **Unified URL configuration management**
+- `src/wsclients/WebSocketClient.js` - WebSocket connection management
+- `src/wsclients/BaseWebSocketClient.js` - Base WebSocket client class
 
 #### Component Architecture
 Components organized by feature:
@@ -64,9 +68,29 @@ Components organized by feature:
 
 ### Backend Integration
 
+#### URL Configuration Management
+All API and WebSocket URLs are managed centrally in `src/utils/config.js`:
+- **Environment Detection**: Automatically selects development or production URLs
+- **API Configuration**: Centralized API endpoint management
+- **WebSocket Configuration**: Unified WebSocket URL handling
+- **Helper Functions**: `getApiUrl()`, `getWebSocketUrl()`, `getMatchWebSocketUrl()`, `getMessageWebSocketUrl()`
+
+Usage example:
+```javascript
+import { getApiUrl, getMessageWebSocketUrl } from '@/utils/config.js'
+
+// API calls
+const apiEndpoint = getApiUrl('/api/v1/UserManagement/get_user_info_with_user_id')
+
+// WebSocket connections  
+const wsUrl = getMessageWebSocketUrl()
+const ws = new WebSocket(wsUrl)
+```
+
 #### API Configuration
-- **Development**: `http://localhost:8000/api/v1/`
-- **Production**: `https://lovetapoversea.xyz:4433/api/v1/`
+- **Development**: URLs configured in `src/utils/config.js`
+- **Production**: URLs configured in `src/utils/config.js`
+- **Environment-based**: Automatically switches based on `import.meta.env.DEV`
 
 #### Key API Endpoints
 - **User Management**: `/UserManagement/` (create user, edit profile, get user info)
@@ -74,12 +98,22 @@ Components organized by feature:
 - **Chatroom Management**: `/ChatroomManager/` (get/create chatroom, chat history)
 
 #### WebSocket Connections
-Three specialized WebSocket endpoints:
+Three specialized WebSocket endpoints (all managed via `src/utils/config.js`):
 - `/ws/base` - General purpose with authentication
-- `/ws/message` - Private messaging and chat functionality
+- `/ws/message` - Private messaging and chat functionality  
 - `/ws/match` - Real-time match notifications
 
 All WebSocket connections require authentication via `user_id` on connection.
+
+**Usage with unified configuration:**
+```javascript
+import { getBaseWebSocketUrl, getMessageWebSocketUrl, getMatchWebSocketUrl } from '@/utils/config.js'
+
+// Connect to different WebSocket endpoints
+const baseWs = new WebSocket(getBaseWebSocketUrl())
+const messageWs = new WebSocket(getMessageWebSocketUrl()) 
+const matchWs = new WebSocket(getMatchWebSocketUrl())
+```
 
 ### Key Development Patterns
 
@@ -100,6 +134,24 @@ All API calls should handle errors gracefully and provide user feedback via the 
 ## Important Files to Review
 
 - `FRONTEND_INTEGRATION_GUIDE.md` - Comprehensive backend API documentation
+- `src/utils/config.js` - **Unified URL configuration management (NEW)**
 - `src/composables/useApiRequester.js` - API request composable
-- `src/utils/WebSocketClient.js` - WebSocket connection utilities
+- `src/services/NetworkManager.js` - HTTP request management with interceptors
+- `src/wsclients/WebSocketClient.js` - WebSocket connection utilities
+- `src/wsclients/BaseWebSocketClient.js` - Base WebSocket client class
 - `src/stores/navigation.js` - Navigation state management
+- `src/stores/user.js` - User state management
+
+## Recent Updates
+
+### URL Configuration Refactor
+- **Centralized Configuration**: All URLs now managed in `src/utils/config.js`
+- **Environment Detection**: Automatic switching between development/production URLs
+- **Unified API**: Consistent interface for getting API and WebSocket URLs
+- **Migration**: Updated all files to use the new configuration system
+
+### Profile Page Enhancement
+- **Dynamic Data Loading**: Profile page now fetches real user data via API
+- **Error Handling**: Added loading states and error handling with retry functionality
+- **Real-time Updates**: Listens to `match_update` events for automatic data refresh
+- **Modern UI**: Improved styling with card-based layout and responsive design
