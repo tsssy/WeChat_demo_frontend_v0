@@ -41,6 +41,11 @@
           </span>
         </li>
       </ul>
+      <!-- 用户名显示 -->
+      <div v-if="currentUserName" class="current-user">
+        <div class="user-name">{{ currentUserName }}</div>
+        <div v-if="currentUserId" class="user-id">{{ currentUserId }}</div>
+      </div>
     </div>
   </div>
 </template>
@@ -54,6 +59,7 @@ import { debugLog, devHelpers } from '../utils/debug.js'
 import ManualMatchClient from '../wsclients/ManualMatchClient.js'
 import WebSocketClient from '../wsclients/WebSocketClient.js'
 import { APIServices } from '../services/APIServices.js'
+import { getTelegramUser } from '../utils/telegramUser.js'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -77,6 +83,10 @@ const maxRetries = ref(10) // 增加重试次数到10次
 const retryDelay = ref(3000) // 3秒重试间隔
 const isRetrying = ref(false)
 
+// 用户信息状态
+const currentUserName = ref('')
+const currentUserId = ref('')
+
 // 加载状态信息
 const loadingMessages = ref([
   'Analyzing your personality.',
@@ -96,6 +106,23 @@ const getRetryMessage = () => {
 
 // WebSocket配置 - 使用统一配置管理
 import { getMatchWebSocketUrl, getMessageWebSocketUrl } from '@/utils/config.js'
+
+// 加载当前用户名称
+const loadCurrentUserName = async () => {
+  try {
+    const telegramUser = await getTelegramUser()
+    currentUserName.value = telegramUser.telegram_user_name || 'Unknown User'
+    currentUserId.value = telegramUser.user_id || ''
+    debugLog.log('Loading页面 - 用户信息已加载:', {
+      name: currentUserName.value,
+      id: currentUserId.value
+    })
+  } catch (error) {
+    debugLog.error('Loading页面 - 加载用户信息失败:', error)
+    currentUserName.value = 'Unknown User'
+    currentUserId.value = ''
+  }
+}
 
 // 检查用户匹配状态并决定导航
 const checkUserMatchStatus = async () => {
@@ -433,6 +460,9 @@ function handleChatError(data) {
 onMounted(() => {
   debugLog.log('Loading页面挂载开始')
   
+  // 加载当前用户名称
+  loadCurrentUserName()
+  
   // 记录页面开始时间
   pageStartTime.value = Date.now()
   debugLog.log('页面开始时间已记录，开始30秒计时器')
@@ -690,5 +720,44 @@ onUnmounted(() => {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+.current-user {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  opacity: 0.8;
+}
+
+.user-name {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.user-id {
+  font-size: 0.7rem;
+  color: #999;
+  font-weight: 300;
+  opacity: 0.6;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
+}
+
+@media (min-width: 768px) {
+  .current-user {
+    bottom: 30px;
+  }
+  
+  .user-name {
+    font-size: 1rem;
+  }
+  
+  .user-id {
+    font-size: 0.75rem;
+  }
 }
 </style> 
