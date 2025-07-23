@@ -412,9 +412,27 @@ onUnmounted(() => {
   eventBus.off('chat:private_message', handleChatMessage)
 })
 
-// Like/Unlike按钮点击逻辑
-function toggleLike() {
-  isLiked.value = !isLiked.value
+// Like/Unlike按钮点击逻辑，调用toggle_like接口
+async function toggleLike() {
+  try {
+    // 获取当前match_id
+    const match_id = userStore.current_match_id || (sessionStorage.getItem('current_match') ? JSON.parse(sessionStorage.getItem('current_match')).match_id : null)
+    if (!match_id) {
+      toast.value?.show('无法获取匹配ID，无法点赞', 'error')
+      return
+    }
+    // 调用toggleLike接口
+    const res = await APIServices.toggleLike({ match_id })
+    if (res && res.success) {
+      isLiked.value = !isLiked.value
+      toast.value?.show(isLiked.value ? '已点赞' : '已取消点赞', 'success')
+    } else {
+      toast.value?.show('操作失败，请稍后重试', 'error')
+    }
+  } catch (e) {
+    toast.value?.show('网络错误，操作失败', 'error')
+    debugLog.error('toggleLike error:', e)
+  }
 }
 // 关闭按钮点击逻辑，根据当前状态跳转到Mate或Match页面
 function closeChat() {
