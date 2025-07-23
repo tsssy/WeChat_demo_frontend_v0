@@ -105,6 +105,51 @@ watch(messages, async () => {
   }
 })
 
+// 获取匹配信息并初始化like状态
+const loadMatchInfo = async () => {
+  try {
+    const currentUserId = userStore.user_id
+    let currentMatchId = userStore.current_match_id
+    
+    // Try to get match_id from session if not in store
+    if (!currentMatchId) {
+      const sessionMatch = sessionStorage.getItem('current_match')
+      if (sessionMatch) {
+        const matchData = JSON.parse(sessionMatch)
+        currentMatchId = matchData.match_id
+        debugLog.log('Found match_id in session:', currentMatchId)
+      }
+    }
+    
+    if (!currentUserId || !currentMatchId) {
+      debugLog.error('Missing user_id or match_id for loading match info')
+      return
+    }
+    
+    debugLog.log('Loading match info with:', {
+      user_id: currentUserId,
+      match_id: currentMatchId
+    })
+    
+    // Call get_match_info API through APIServices
+    const matchInfoResponse = await APIServices.getMatchInfo({
+      user_id: currentUserId,
+      match_id: currentMatchId
+    })
+    
+    debugLog.log('Match info response:', matchInfoResponse)
+    
+    // Set like button state based on API response
+    isLiked.value = matchInfoResponse.is_liked || false
+    debugLog.log('Like button state initialized:', isLiked.value)
+    
+  } catch (error) {
+    debugLog.error('Failed to load match info:', error)
+    // Keep default state if API call fails
+    isLiked.value = false
+  }
+}
+
 // Load chat history using get_chat_history API call
 const loadChatHistory = async () => {
   try {
@@ -497,7 +542,9 @@ onMounted(async () => {
       }
     }
   }
-  // 5. 连接 WebSocket 并加载历史
+  // 5. 加载匹配信息以初始化like按钮状态
+  await loadMatchInfo()
+  // 6. 连接 WebSocket 并加载历史
   await ensureWebSocketAndLoadHistory()
 })
 
@@ -522,7 +569,8 @@ async function toggleLike() {
     // 调用toggleLike接口
     const res = await APIServices.toggleLike({ match_id })
     if (res && res.success) {
-      isLiked.value = !isLiked.value
+      // 重新获取匹配信息以确保状态同步
+      await loadMatchInfo()
       toast.value?.show(isLiked.value ? '已点赞' : '已取消点赞', 'success')
     } else {
       toast.value?.show('操作失败，请稍后重试', 'error')
