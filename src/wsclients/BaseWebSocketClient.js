@@ -54,14 +54,12 @@ class BaseWebSocketClient {
     }
 
     try {
-      const registerMessage = JSON.stringify({
-        user_id: userInfo.user_id || userInfo.userId,
-        ...userInfo
-      })
-      
+      // 只发送user_id字段，避免多余字段
+      const user_id = userInfo.user_id !== undefined ? userInfo.user_id : userInfo.userId
+      const registerMessage = JSON.stringify({ user_id })
+      debugLog.websocket('发送注册消息:', { user_id })
       this.socket.send(registerMessage)
-      this.user_id = userInfo.user_id || userInfo.userId
-      debugLog.websocket('发送注册消息:', userInfo)
+      this.user_id = user_id
       return true
     } catch (error) {
       debugLog.error('注册消息发送失败:', error)

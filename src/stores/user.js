@@ -14,22 +14,22 @@ export const useUserStore = defineStore('user', () => {
   const matchTargetUser = ref(null)
 
   // 计算属性
-  const userId = computed(() => currentUser.value?.user_id || null)
-  const userName = computed(() => currentUser.value?.telegram_user_name || null)
-  const userGender = computed(() => currentUser.value?.gender || null)
-  const userAge = computed(() => currentUser.value?.age || null)
-  const targetGender = computed(() => currentUser.value?.target_gender || null)
-  const userSummary = computed(() => currentUser.value?.summary || null)
-  const matchIds = computed(() => currentUser.value?.match_ids || [])
+  const user_id = computed(() => currentUser.value?.user_id || null)
+  const user_name = computed(() => currentUser.value?.telegram_user_name || null)
+  const user_gender = computed(() => currentUser.value?.gender || null)
+  const user_age = computed(() => currentUser.value?.age || null)
+  const target_gender = computed(() => currentUser.value?.target_gender || null)
+  const user_summary = computed(() => currentUser.value?.summary || null)
+  const match_ids = computed(() => currentUser.value?.match_ids || [])
 
   // 匹配相关计算属性
-  const currentMatchId = computed(() => currentMatch.value?.match_id || null)
-  const targetUserId = computed(() => currentMatch.value?.target_user_id || null)
-  const matchScore = computed(() => currentMatch.value?.match_score || null)
-  const matchDescription = computed(() => currentMatch.value?.description_for_target || null)
-  const isLiked = computed(() => currentMatch.value?.is_liked || false)
-  const chatroomId = computed(() => currentMatch.value?.chatroom_id || null)
-  const targetUserName = computed(() => matchTargetUser.value?.telegram_user_name || null)
+  const current_match_id = computed(() => currentMatch.value?.match_id || null)
+  const target_user_id = computed(() => currentMatch.value?.target_user_id || null)
+  const match_score = computed(() => currentMatch.value?.match_score || null)
+  const match_description = computed(() => currentMatch.value?.description_for_target || null)
+  const is_liked = computed(() => currentMatch.value?.is_liked || false)
+  const chatroom_id = computed(() => currentMatch.value?.chatroom_id || null)
+  const target_user_name = computed(() => matchTargetUser.value?.telegram_user_name || null)
 
   // 是否有用户信息
   const hasUser = computed(() => !!currentUser.value)
@@ -241,24 +241,24 @@ export const useUserStore = defineStore('user', () => {
     matchTargetUser,
     
     // 计算属性
-    userId,
-    userName,
-    userGender,
-    userAge,
-    targetGender,
-    userSummary,
-    matchIds,
+    user_id,
+    user_name,
+    user_gender,
+    user_age,
+    target_gender,
+    user_summary,
+    match_ids,
     hasUser,
     hasBasicProfile,
     
     // 匹配相关计算属性
-    currentMatchId,
-    targetUserId,
-    matchScore,
-    matchDescription,
-    isLiked,
-    chatroomId,
-    targetUserName,
+    current_match_id,
+    target_user_id,
+    match_score,
+    match_description,
+    is_liked,
+    chatroom_id,
+    target_user_name,
     
     // 方法
     initUser,

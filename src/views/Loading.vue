@@ -204,7 +204,7 @@ const checkAndNavigate = () => {
 
 // 初始化匹配WebSocket连接
 const initializeMatchWebSocket = () => {
-  if (!userStore.userId) {
+  if (!userStore.user_id) {
     debugLog.error('用户未初始化，无法建立匹配连接')
     return
   }
@@ -214,9 +214,9 @@ const initializeMatchWebSocket = () => {
     
     const wsUrl = getWebSocketUrl()
     debugLog.websocket('初始化匹配WebSocket:', wsUrl)
-    debugLog.websocket('用户ID:', userStore.userId)
+    debugLog.websocket('用户ID:', userStore.user_id)
     
-    matchClient.value = new ManualMatchClient(wsUrl, userStore.userId)
+    matchClient.value = new ManualMatchClient(wsUrl, userStore.user_id)
     matchClient.value.connect()
     
     // 连接成功后自动开始匹配
@@ -236,7 +236,7 @@ const initializeMatchWebSocket = () => {
 
 // 初始化消息WebSocket连接
 const initializeMessageWebSocket = async () => {
-  if (!userStore.userId) {
+  if (!userStore.user_id) {
     debugLog.error('用户未初始化，无法建立消息连接')
     return
   }
@@ -246,14 +246,14 @@ const initializeMessageWebSocket = async () => {
     
     const wsUrl = getMessageWebSocketUrl()
     debugLog.websocket('初始化消息WebSocket:', wsUrl)
-    debugLog.websocket('用户ID:', userStore.userId)
+    debugLog.websocket('用户ID:', userStore.user_id)
     
     // Try to get existing singleton instance first
     messageClient.value = WebSocketClient.getInstance()
     
     if (!messageClient.value) {
       // If singleton doesn't exist, create new instance
-      messageClient.value = WebSocketClient.getInstance(wsUrl, userStore.userId)
+      messageClient.value = WebSocketClient.getInstance(wsUrl, userStore.user_id)
     }
     
     if (messageClient.value) {
@@ -421,7 +421,7 @@ onMounted(() => {
   
   // 等待用户初始化完成后再建立WebSocket连接
   const checkUserAndConnect = async () => {
-    if (userStore.hasUser && userStore.userId) {
+    if (userStore.hasUser && userStore.user_id) {
       debugLog.log('用户已就绪，开始建立匹配连接')
       initializeMatchWebSocket()
       // 不在此处初始化消息WebSocket，等收到匹配后再初始化
@@ -448,7 +448,7 @@ onMounted(() => {
   eventBus.on('chat:error', handleChatError)
   
   // 显示当前用户信息 (开发调试)
-  debugLog.user('Loading页面挂载 - 当前用户ID:', userStore.userId)
+  debugLog.user('Loading页面挂载 - 当前用户ID:', userStore.user_id)
   debugLog.user('Loading页面挂载 - 完整用户信息:', userStore.currentUser)
   debugLog.user('Loading页面挂载 - 用户状态:', {
     hasUser: userStore.hasUser,

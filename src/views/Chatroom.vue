@@ -7,20 +7,22 @@
       <button class="like-btn" @click="toggleLike">{{ isLiked ? 'Unlike' : 'Like' }}</button>
       <!-- Like/Unlike 按钮，后续可切换 -->
     </div>
-    
+    <!-- WebSocket 连接中状态 -->
+    <div v-if="wsConnecting" class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>正在连接聊天服务器...</p>
+    </div>
     <!-- Loading state -->
-    <div v-if="isLoading" class="loading-state">
+    <div v-else-if="isLoading" class="loading-state">
       <div class="loading-spinner"></div>
       <p>Loading chat history...</p>
     </div>
-    
     <!-- Error state -->
     <div v-else-if="error" class="error-state">
       <h3>Error loading chat</h3>
       <p>{{ error }}</p>
-      <button @click="loadChatHistory" class="retry-btn">Retry</button>
+      <button @click="ensureWebSocketAndLoadHistory" class="retry-btn">Retry</button>
     </div>
-    
     <!-- Chat messages -->
     <div v-else class="chat-messages">
       <!-- Show placeholder if no messages -->
@@ -81,6 +83,7 @@ const toast = ref(null)
 const chatUsername = ref('Someone Special')
 const messageInput = ref('')
 const isSending = ref(false)
+const wsConnecting = ref(false) // WebSocket 连接中状态
 
 // WebSocket client
 const messageClient = ref(null)
@@ -91,8 +94,8 @@ const loadChatHistory = async () => {
     isLoading.value = true
     error.value = null
     
-    const currentUserId = userStore.userId
-    let currentChatroomId = userStore.chatroomId
+    const currentUserId = userStore.user_id
+    let currentChatroomId = userStore.chatroom_id
     
     // Try to get chatroom_id from session if not in store
     if (!currentChatroomId) {
@@ -148,7 +151,7 @@ const loadChatHistory = async () => {
     }
     
     // Set chat username from target user
-    const targetUserName = userStore.targetUserName
+    const targetUserName = userStore.target_user_name
     if (targetUserName) {
       chatUsername.value = targetUserName
     }
@@ -183,9 +186,9 @@ const sendMessage = async () => {
     debugLog.log('Starting message send process...')
     
     // Get required data from session storage
-    const currentUserId = userStore.userId
-    const currentTargetUserId = userStore.targetUserId
-    let currentChatroomId = userStore.chatroomId
+    const currentUserId = userStore.user_id
+    const currentTargetUserId = userStore.target_user_id
+    let currentChatroomId = userStore.chatroom_id
     
     debugLog.log('Initial data from store:', {
       currentUserId,
@@ -253,7 +256,7 @@ const sendMessage = async () => {
     
     if (success) {
       // Add the sent message to UI immediately
-      addNewMessage(messageData.content, userStore.userName || 'You', true)
+      addNewMessage(messageData.content, userStore.user_name || 'You', true)
       
       // Clear input on successful send
       messageInput.value = ''
@@ -296,46 +299,113 @@ const addNewMessage = (content, senderName, isFromSelf = false) => {
 // 监听聊天消息事件（处理接收到的消息）
 function handleChatMessage(data) {
   debugLog.log('Received chat message via eventBus:', data)
-  
-  // Handle private messages
-  if (data.type === 'private' || data.content) {
-    const senderName = data.sender_name || 'Unknown'
-    const content = data.content || data.message || ''
-    
-    // Determine if this message is from the current user
-    const isFromSelf = data.sender_id === userStore.userId || senderName === userStore.userName
-    
-    debugLog.log('Adding received message:', {
-      content,
-      senderName,
-      isFromSelf,
-      currentUserName: userStore.userName,
-      currentUserId: userStore.userId,
-      senderUserId: data.sender_id
-    })
-    
-    addNewMessage(content, senderName, isFromSelf)
+  // 只显示private/private_message类型，其它类型只console显示
+  if (!data || (data.type !== 'private' && data.type !== 'private_message')) {
+    debugLog.log('内部消息类型，仅console显示:', data)
+    return
   }
+  // 只显示当前聊天chatroom_id的消息
+  const currentChatroomId = userStore.chatroom_id || (sessionStorage.getItem('current_match') ? JSON.parse(sessionStorage.getItem('current_match')).chatroom_id : null)
+  if (!currentChatroomId || data.chatroom_id != currentChatroomId) {
+    debugLog.log('忽略非当前chatroom_id的消息:', data)
+    return
+  }
+  const senderName = data.sender_name || 'Unknown'
+  const content = data.content || data.message || ''
+  const isFromSelf = false
+  debugLog.log('Adding received message:', {
+    content,
+    senderName,
+    isFromSelf,
+    currentUserName: userStore.user_name,
+    currentUserId: userStore.user_id,
+    senderUserId: data.sender_id
+  })
+  addNewMessage(content, senderName, isFromSelf)
+}
+
+// 获取当前用户ID，优先从store，其次从session，只用user_id字段
+function getCurrentUserId() {
+  let user_id = userStore.user_id
+  if (!user_id) {
+    const sessionMatch = sessionStorage.getItem('current_match')
+    if (sessionMatch) {
+      try {
+        const matchData = JSON.parse(sessionMatch)
+        // 只用user_id/self_user_id/id字段
+        user_id = matchData.user_id || matchData.self_user_id || matchData.id
+      } catch (e) {
+        console.error('解析sessionStorage.current_match失败', e)
+      }
+    }
+  }
+  // 打印user_id类型和值
+  console.log('[WS DEBUG] getCurrentUserId:', user_id, typeof user_id)
+  // 转为字符串并去除空格
+  if (user_id !== undefined && user_id !== null) {
+    user_id = String(user_id).trim()
+  }
+  // 检查user_id有效性
+  if (!user_id || user_id === 'None' || user_id === 'null' || user_id === 'undefined') return null
+  return user_id
+}
+
+// 带重试的WebSocket连接函数，始终传递user_id
+async function connectWebSocketWithRetry(maxRetries = 10, delayMs = 500) {
+  let attempt = 0
+  const wsUrl = 'wss://lovetapoversea.xyz:4433/ws/message'
+  const user_id = getCurrentUserId()
+  if (!user_id) {
+    debugLog.error('无法获取有效user_id，WebSocket连接中止')
+    error.value = '用户未登录或信息丢失，请重新登录'
+    return false
+  }
+  console.log('[WS DEBUG] connectWebSocketWithRetry 使用user_id:', user_id)
+  while (attempt < maxRetries) {
+    // 每次都用user_id和url创建实例
+    messageClient.value = WebSocketClient.getInstance(wsUrl, user_id)
+    if (!messageClient.value) {
+      debugLog.error('WebSocket client 不可用')
+      await new Promise(res => setTimeout(res, delayMs))
+      attempt++
+      continue
+    }
+    // 尝试连接
+    messageClient.value.connect && messageClient.value.connect()
+    // 等待0.5秒让连接建立
+    await new Promise(res => setTimeout(res, delayMs))
+    if (messageClient.value.isReady()) {
+      debugLog.log('WebSocket 连接成功，重试次数:', attempt)
+      return true
+    }
+    debugLog.log('WebSocket 未就绪，重试中...', attempt + 1)
+    attempt++
+  }
+  debugLog.error('WebSocket 连接重试超出最大次数')
+  return false
+}
+
+// 检查 WebSocket 连接并在 ready 后加载聊天历史（带重试）
+const ensureWebSocketAndLoadHistory = async () => {
+  wsConnecting.value = true
+  error.value = null
+  // 自动重试连接WebSocket
+  const connected = await connectWebSocketWithRetry(10, 500)
+  if (!connected) {
+    error.value = '聊天服务器连接失败（已重试10次），请检查网络或稍后重试。'
+    wsConnecting.value = false
+    return
+  }
+  debugLog.log('WebSocket 已就绪，开始加载聊天历史')
+  wsConnecting.value = false
+  loadChatHistory()
 }
 
 onMounted(() => {
   eventBus.on('chat:message', handleChatMessage)
-  eventBus.on('chat:private_message', handleChatMessage) // Listen for private messages specifically
-  loadChatHistory()
-  
-  // Initialize WebSocket client
-  debugLog.log('Initializing WebSocket client in Chatroom...')
-  messageClient.value = WebSocketClient.getInstance()
-  
-  if (!messageClient.value) {
-    debugLog.error('WebSocket client not available. Please ensure it was initialized in Loading page.')
-    toast.value?.show('Chat connection not available. Please refresh the page.', 'error')
-  } else {
-    debugLog.log('WebSocket client found:', {
-      isReady: messageClient.value.isReady(),
-      connectionState: messageClient.value.getConnectionState()
-    })
-  }
+  eventBus.on('chat:private_message', handleChatMessage)
+  // 先检查 WebSocket 连接，ready 后再加载历史
+  ensureWebSocketAndLoadHistory()
 })
 onUnmounted(() => {
   eventBus.off('chat:message', handleChatMessage)

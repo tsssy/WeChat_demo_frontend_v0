@@ -58,7 +58,7 @@ const targetUserInfo = ref(null)
 
 // Computed properties
 const targetUserDisplayName = computed(() => {
-  const name = targetUserInfo.value?.telegram_user_name || userStore.targetUserName
+  const name = targetUserInfo.value?.telegram_user_name || userStore.target_user_name
   return name || 'Someone Special'
 })
 
@@ -68,7 +68,7 @@ const targetGenderPronoun = computed(() => {
 })
 
 const matchDescription = computed(() => {
-  return matchInfo.value?.description_for_target || userStore.matchDescription
+  return matchInfo.value?.description_for_target || userStore.match_description
 })
 
 const defaultDescription = computed(() => {
@@ -92,37 +92,37 @@ const loadMatchData = async () => {
       debugLog.log('Match data restored from session storage')
       // Use stored data as fallback
       matchInfo.value = {
-        description_for_target: userStore.matchDescription
+        description_for_target: userStore.match_description
       }
       targetUserInfo.value = {
-        telegram_user_name: userStore.targetUserName
+        telegram_user_name: userStore.target_user_name
       }
     }
     
-    const currentMatchId = userStore.currentMatchId
-    const currentUserId = userStore.userId
-    const currentTargetUserId = userStore.targetUserId
+    const current_match_id = userStore.current_match_id
+    const current_user_id = userStore.user_id
+    const current_target_user_id = userStore.target_user_id
     
-    if (!currentMatchId || !currentUserId) {
+    if (!current_match_id || !current_user_id) {
       throw new Error('No match information available. Please start from the matching process.')
     }
     
-    debugLog.log('Fetching match info:', { currentUserId, currentMatchId })
+    debugLog.log('Fetching match info:', { current_user_id, current_match_id })
     
     try {
       // Fetch match information from API
-      const matchResponse = await APIServices.getMatchInfo({ user_id: currentUserId, match_id: currentMatchId })
+      const matchResponse = await APIServices.getMatchInfo({ user_id: current_user_id, match_id: current_match_id })
       matchInfo.value = matchResponse
       debugLog.log('Match info fetched:', matchResponse)
       
       // Get target user ID from match response or stored data
-      const targetUserId = matchResponse.target_user_id || currentTargetUserId
+      const target_user_id = matchResponse.target_user_id || current_target_user_id
       
-      if (targetUserId) {
-        debugLog.log('Fetching target user info:', targetUserId)
+      if (target_user_id) {
+        debugLog.log('Fetching target user info:', target_user_id)
         
         // Fetch target user information
-        const userResponse = await APIServices.getUserInfoWithUserId(targetUserId)
+        const userResponse = await APIServices.getUserInfoWithUserId(target_user_id)
         targetUserInfo.value = userResponse
         debugLog.log('Target user info fetched:', userResponse)
         
@@ -154,26 +154,26 @@ const retryLoad = () => {
 // Navigation functions
 const goToChatroom = async () => {
   try {
-    const currentUserId = userStore.userId
-    const currentMatchId = userStore.currentMatchId
-    const currentTargetUserId = userStore.targetUserId
+    const current_user_id = userStore.user_id
+    const current_match_id = userStore.current_match_id
+    const current_target_user_id = userStore.target_user_id
     
-    if (!currentUserId || !currentMatchId || !currentTargetUserId) {
+    if (!current_user_id || !current_match_id || !current_target_user_id) {
       toast.value?.show('Missing required information for creating chatroom', 'error')
       return
     }
     
     debugLog.log('Creating/getting chatroom with:', {
-      user_id_1: currentUserId,
-      user_id_2: currentTargetUserId,
-      match_id: currentMatchId
+      user_id_1: current_user_id,
+      user_id_2: current_target_user_id,
+      match_id: current_match_id
     })
     
     // Call get_or_create_chatroom API with correct parameter names
     const chatroomResponse = await APIServices.getOrCreateChatroom({
-      user_id_1: currentUserId,
-      user_id_2: currentTargetUserId,
-      match_id: currentMatchId
+      user_id_1: current_user_id,
+      user_id_2: current_target_user_id,
+      match_id: current_match_id
     })
     
     if (chatroomResponse.success && chatroomResponse.chatroom_id) {
@@ -202,11 +202,11 @@ const goToMatch = () => {
 onMounted(() => {
   debugLog.log('WhyHim page mounted')
   debugLog.log('User store state:', {
-    currentMatchId: userStore.currentMatchId,
-    targetUserId: userStore.targetUserId,
-    userId: userStore.userId,
-    targetUserName: userStore.targetUserName,
-    matchDescription: userStore.matchDescription
+    current_match_id: userStore.current_match_id,
+    target_user_id: userStore.target_user_id,
+    user_id: userStore.user_id,
+    target_user_name: userStore.target_user_name,
+    match_description: userStore.match_description
   })
   
   loadMatchData()
