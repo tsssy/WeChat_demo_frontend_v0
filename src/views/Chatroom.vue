@@ -274,7 +274,15 @@ const sendMessage = async () => {
     if (success) {
       // Add the sent message to UI immediately
       addNewMessage(messageData.content, userStore.user_name || 'You', true)
-      
+      // 新增：发送后自动滚动到底部锚点
+      nextTick(() => {
+        if (bottomAnchor.value) {
+          console.log('sendMessage: 滚动到底部锚点', bottomAnchor.value)
+          bottomAnchor.value.scrollIntoView({ behavior: 'auto' })
+        } else {
+          console.log('sendMessage: bottomAnchor is null')
+        }
+      })
       // Clear input on successful send
       messageInput.value = ''
       debugLog.log('Message sent successfully, input cleared')
