@@ -41,7 +41,6 @@
           </span>
         </li>
       </ul>
-      <p v-if="!showFinalMessage">Finding candidates ....</p>
     </div>
   </div>
 </template>
@@ -54,6 +53,7 @@ import eventBus from '../utils/eventBus.js'
 import { debugLog, devHelpers } from '../utils/debug.js'
 import ManualMatchClient from '../wsclients/ManualMatchClient.js'
 import WebSocketClient from '../wsclients/WebSocketClient.js'
+import { APIServices } from '../services/APIServices.js'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -96,6 +96,35 @@ const getRetryMessage = () => {
 
 // WebSocket配置 - 使用统一配置管理
 import { getMatchWebSocketUrl, getMessageWebSocketUrl } from '@/utils/config.js'
+
+// 检查用户匹配状态并决定导航
+const checkUserMatchStatus = async () => {
+  if (!userStore.user_id) {
+    debugLog.error('用户未初始化，无法检查匹配状态')
+    return false
+  }
+
+  try {
+    debugLog.log('检查用户匹配状态，用户ID:', userStore.user_id)
+    const userInfo = await APIServices.getUserInfoWithUserId({ user_id: userStore.user_id })
+    debugLog.log('获取到用户信息:', userInfo)
+    debugLog.log('用户匹配ID列表:', userInfo.match_ids)
+    
+    // 检查是否有匹配ID（数组不为空）
+    if (userInfo.match_ids && userInfo.match_ids.length > 0) {
+      debugLog.log('用户已有匹配，直接跳转到Match页面')
+      router.push('/match')
+      return true
+    } else {
+      debugLog.log('用户无匹配记录，继续匹配流程')
+      return false
+    }
+  } catch (error) {
+    debugLog.error('检查用户匹配状态失败:', error)
+    debugLog.log('API调用失败，继续匹配流程')
+    return false
+  }
+}
 
 // 开始思考过程动画
 const startThinkingAnimation = () => {
@@ -414,7 +443,16 @@ onMounted(() => {
   // 等待用户初始化完成后再建立WebSocket连接
   const checkUserAndConnect = async () => {
     if (userStore.hasUser && userStore.user_id) {
-      debugLog.log('用户已就绪，开始建立匹配连接')
+      debugLog.log('用户已就绪，首先检查匹配状态')
+      
+      // 第一步：检查用户是否已有匹配
+      const hasExistingMatch = await checkUserMatchStatus()
+      if (hasExistingMatch) {
+        debugLog.log('用户已有匹配，已跳转到Match页面，停止Loading流程')
+        return
+      }
+      
+      debugLog.log('用户无匹配，开始建立匹配连接')
       initializeMatchWebSocket()
       // 不在此处初始化消息WebSocket，等收到匹配后再初始化
     } else {

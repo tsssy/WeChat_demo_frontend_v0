@@ -5,9 +5,9 @@
  * 默认用户配置
  */
 const DEFAULT_USER = {
-  user_id: 1000001,
+  user_id: 1000000,
   telegram_user_name: 'default_user',
-  telegram_user_id: 1000001,
+  telegram_user_id: 1000000,
   gender: 2, // 默认为女性
   age: null,
   target_gender: 1, // 默认寻找男性
