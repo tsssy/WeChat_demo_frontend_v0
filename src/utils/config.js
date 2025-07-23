@@ -4,6 +4,24 @@
 const isDevelopment = import.meta.env.DEV
 const isProduction = import.meta.env.PROD
 
+// ======= DEBUG配置 =======
+// 手动控制Debug模式，不依赖于环境变量
+export const DEBUG_CONFIG = {
+  enabled: true, // 手动控制是否启用调试模式，修改这里可以开启/关闭debug
+  showUserInfo: true,
+  showApiCalls: true,
+  showWebSocket: true,
+  showRouteChanges: true,
+  showEventBus: true
+}
+
+// ======= USER_ID覆盖配置 =======
+// 用于调试时使用自定义user_id
+export const USER_ID_OVERRIDE = {
+  enabled: false, // 设为true时启用自定义user_id覆盖
+  userId: 1000001 // 当enabled为true时使用的自定义user_id
+}
+
 // 基础域名配置
 const DOMAINS = {
   development: {
@@ -98,6 +116,8 @@ export const printCurrentConfig = () => {
 export default {
   API_CONFIG,
   WEBSOCKET_CONFIG,
+  DEBUG_CONFIG,
+  USER_ID_OVERRIDE,
   getApiUrl,
   getWebSocketUrl,
   getMatchWebSocketUrl,

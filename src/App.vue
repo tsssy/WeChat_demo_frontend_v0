@@ -1,7 +1,6 @@
 <script setup>
 // 引入底部导航栏骨架组件
 import BottomNavigationBar from './components/BottomNavigationBar.vue'
-import DebugPanel from './components/DebugPanel.vue'
 import Toast from './components/Toast.vue'
 import { useRoute } from 'vue-router'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
@@ -63,8 +62,6 @@ onUnmounted(() => {
     <router-view />
     <!-- 全局底部导航栏骨架 - 仅在非Loading页面显示 -->
     <BottomNavigationBar v-if="showBottomNav" />
-    <!-- 开发调试面板 -->
-    <DebugPanel />
     <!-- 全局Toast组件 -->
     <Toast ref="toastRef" />
   </div>

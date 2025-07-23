@@ -1,17 +1,19 @@
 // Global debug configuration
-// Automatically enables debug mode in development, disables in production
-export const DEBUG = import.meta.env.DEV
+// Import manual debug control from config instead of using environment variables
+import { DEBUG_CONFIG } from './config.js'
+
+export const DEBUG = DEBUG_CONFIG.enabled
 export const IS_DEVELOPMENT = import.meta.env.DEV
 export const IS_PRODUCTION = import.meta.env.PROD
 
-// Debug configuration object
+// Debug configuration object using config.js settings
 export const debugConfig = {
-  enabled: DEBUG,
-  showUserInfo: DEBUG,
-  showApiCalls: DEBUG,
-  showWebSocket: DEBUG,
-  showRouteChanges: DEBUG,
-  showEventBus: DEBUG,
+  enabled: DEBUG_CONFIG.enabled,
+  showUserInfo: DEBUG_CONFIG.showUserInfo,
+  showApiCalls: DEBUG_CONFIG.showApiCalls,
+  showWebSocket: DEBUG_CONFIG.showWebSocket,
+  showRouteChanges: DEBUG_CONFIG.showRouteChanges,
+  showEventBus: DEBUG_CONFIG.showEventBus,
   environment: IS_DEVELOPMENT ? 'development' : 'production'
 }
 

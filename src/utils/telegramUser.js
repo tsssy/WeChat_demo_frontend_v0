@@ -1,8 +1,10 @@
 // Telegram用户相关工具函数
-// 当前为骨架实现，使用默认用户ID 1000001
+// 获取真实Telegram用户信息，支持debug模式下的user_id覆盖
+
+import { USER_ID_OVERRIDE } from './config.js'
 
 /**
- * 默认用户配置
+ * 默认用户配置 (仅作为最后的后备方案)
  */
 const DEFAULT_USER = {
   user_id: 1000000,
@@ -16,37 +18,88 @@ const DEFAULT_USER = {
 }
 
 /**
- * 获取Telegram用户信息的骨架函数
- * 当前返回默认用户，未来将从Telegram WebApp API获取
+ * 获取Telegram用户信息
+ * 优先级：1. 用户ID覆盖（调试模式）2. Telegram WebApp API 3. URL参数 4. 默认用户
  * @returns {Promise<Object>} 用户信息对象
  */
 export async function getTelegramUser() {
   try {
-    // 检查是否在Telegram WebApp环境中
+    // 打印入口信息
+    console.log('🚀 [ENTRY] getTelegramUser() 开始获取用户信息...')
+    console.log('🔧 [CONFIG] USER_ID_OVERRIDE.enabled:', USER_ID_OVERRIDE.enabled)
+    console.log('🔧 [CONFIG] USER_ID_OVERRIDE.userId:', USER_ID_OVERRIDE.userId)
+    
+    // 1. 检查是否启用了用户ID覆盖（调试模式）
+    if (USER_ID_OVERRIDE.enabled) {
+      console.log('🐛 [OVERRIDE] ✅ 使用覆盖的user_id:', USER_ID_OVERRIDE.userId)
+      console.log('🐛 [OVERRIDE] 这是调试模式，不是真实用户ID')
+      const result = {
+        user_id: USER_ID_OVERRIDE.userId,
+        telegram_user_name: `debug_user_${USER_ID_OVERRIDE.userId}`,
+        telegram_user_id: USER_ID_OVERRIDE.userId,
+        gender: null, // 需要用户后续设置
+        age: null,
+        target_gender: null,
+        summary: null,
+        match_ids: []
+      }
+      console.log('🎯 [FINAL] 最终使用的user_id:', result.user_id, '(来源: OVERRIDE)')
+      return result
+    }
+
+    console.log('🔍 [CHECK] Override未启用，检查Telegram WebApp API...')
+    
+    // 2. 尝试从Telegram WebApp API获取真实用户信息
     if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
       const webApp = window.Telegram.WebApp
       const user = webApp.initDataUnsafe.user
       
       if (user && user.id) {
-        // 从Telegram获取真实用户信息
-        return {
+        console.log('📱 [TELEGRAM] ✅ 获取到真实Telegram用户信息')
+        console.log('📱 [TELEGRAM] user.id:', user.id)
+        console.log('📱 [TELEGRAM] user.username:', user.username)
+        const result = {
           user_id: user.id,
           telegram_user_name: user.username || `user_${user.id}`,
           telegram_user_id: user.id,
           gender: null, // 需要用户后续设置
           age: null,
-          target_gender: null,
+          target_gender: null, 
           summary: null,
           match_ids: []
         }
+        console.log('🎯 [FINAL] 最终使用的user_id:', result.user_id, '(来源: TELEGRAM_API)')
+        return result
       }
     }
     
-    // 开发环境或非Telegram环境使用默认用户
-    console.log('使用默认用户 (开发环境)', DEFAULT_USER.user_id)
+    console.log('🔍 [CHECK] Telegram API无效，检查URL参数...')
+    
+    // 3. 尝试从URL参数获取用户ID (备用方案)
+    const urlUserId = getUserIdFromUrl()
+    if (urlUserId) {
+      console.log('🔗 [URL] ✅ 从URL参数获取user_id:', urlUserId)
+      const result = {
+        user_id: urlUserId,
+        telegram_user_name: `url_user_${urlUserId}`,
+        telegram_user_id: urlUserId,
+        gender: null,
+        age: null,
+        target_gender: null,
+        summary: null,
+        match_ids: []
+      }
+      console.log('🎯 [FINAL] 最终使用的user_id:', result.user_id, '(来源: URL_PARAMS)')
+      return result
+    }
+    
+    // 4. 最后的后备方案：使用默认用户
+    console.warn('⚠️ [DEFAULT] 无法获取真实用户信息，使用默认用户 (最后的后备方案)')
+    console.log('🎯 [FINAL] 最终使用的user_id:', DEFAULT_USER.user_id, '(来源: DEFAULT_FALLBACK)')
     return DEFAULT_USER
   } catch (error) {
-    console.warn('获取Telegram用户信息失败，使用默认用户:', error)
+    console.error('❌ [ERROR] 获取Telegram用户信息失败，使用默认用户:', error)
+    console.log('🎯 [FINAL] 最终使用的user_id:', DEFAULT_USER.user_id, '(来源: ERROR_FALLBACK)')
     return DEFAULT_USER
   }
 }
