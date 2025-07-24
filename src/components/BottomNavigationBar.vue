@@ -25,19 +25,20 @@
 <script setup>
 // 引入路由
 import { useRoute, useRouter } from 'vue-router'
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import eventBus from '@/utils/eventBus.js'
 
 const router = useRouter()
 const route = useRoute()
 const hasMatesRedDot = ref(false)
 
-// 计算当前激活tab
-const activeTab = (() => {
+// 计算当前激活tab - 使用computed让它变为reactive
+const activeTab = computed(() => {
   if (route.path.startsWith('/mate')) return 'mate'
   if (route.path.startsWith('/profile')) return 'profile'
-  return 'match'
-})()
+  if (route.path.startsWith('/match')) return 'match'
+  return null
+})
 
 // 跳转到对应tab页面
 function navigateTo(tab) {
@@ -117,18 +118,42 @@ onUnmounted(() => {
   color: #888;
   cursor: pointer;
   font-size: 12px;
-  transition: color 0.2s;
-  padding: 4px;
+  transition: all 0.3s ease;
+  padding: 8px 4px;
+  border-radius: 12px;
+  margin: 0 4px;
+  position: relative;
 }
 
 @media (min-width: 768px) {
   .nav-item {
     font-size: 14px;
+    padding: 10px 6px;
   }
 }
+
 .nav-item.active {
   color: #ff6b81;
   font-weight: bold;
+  background: rgba(255, 107, 129, 0.1);
+  transform: translateY(-2px);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  background: #ff6b81;
+  border-radius: 0 0 3px 3px;
+}
+
+.nav-item:hover:not(.active) {
+  color: #666;
+  background: rgba(0, 0, 0, 0.05);
 }
 .nav-icon {
   font-size: 20px;
