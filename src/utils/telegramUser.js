@@ -4,22 +4,12 @@
 import { USER_ID_OVERRIDE } from './config.js'
 
 /**
- * 默认用户配置 (仅作为最后的后备方案)
+ * 默认用户配置 (已移除，现在会抛出错误而不是使用默认用户)
  */
-const DEFAULT_USER = {
-  user_id: 1000000,
-  telegram_user_name: 'default_user',
-  telegram_user_id: 1000000,
-  gender: 2, // 默认为女性
-  age: null,
-  target_gender: 1, // 默认寻找男性
-  summary: null,
-  match_ids: []
-}
 
 /**
  * 获取Telegram用户信息
- * 优先级：1. 用户ID覆盖（调试模式）2. Telegram WebApp API 3. URL参数 4. 默认用户
+ * 优先级：1. 用户ID覆盖（调试模式）2. Telegram WebApp API 3. URL参数 4. 抛出错误
  * @returns {Promise<Object>} 用户信息对象
  */
 export async function getTelegramUser() {
@@ -93,14 +83,12 @@ export async function getTelegramUser() {
       return result
     }
     
-    // 4. 最后的后备方案：使用默认用户
-    console.warn('⚠️ [DEFAULT] 无法获取真实用户信息，使用默认用户 (最后的后备方案)')
-    console.log('🎯 [FINAL] 最终使用的user_id:', DEFAULT_USER.user_id, '(来源: DEFAULT_FALLBACK)')
-    return DEFAULT_USER
+    // 4. 无法获取用户信息，抛出错误
+    console.error('❌ [ERROR] 无法获取Telegram用户信息，所有方法都失败了')
+    throw new Error('Failed to get telegram user info')
   } catch (error) {
-    console.error('❌ [ERROR] 获取Telegram用户信息失败，使用默认用户:', error)
-    console.log('🎯 [FINAL] 最终使用的user_id:', DEFAULT_USER.user_id, '(来源: ERROR_FALLBACK)')
-    return DEFAULT_USER
+    console.error('❌ [ERROR] 获取Telegram用户信息失败:', error)
+    throw error
   }
 }
 

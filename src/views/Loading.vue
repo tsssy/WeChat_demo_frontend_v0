@@ -47,6 +47,13 @@
         >
           Connection failed, please check your network setups. If you are using VPN, check your VPN setups and open the miniapp again.
         </li>
+        <!-- Telegram用户信息获取失败消息 -->
+        <li 
+          v-if="showTelegramError" 
+          class="telegram-error-message active"
+        >
+          Failed to get telegram user info, please reopen the miniapp from Telegram app.
+        </li>
       </ul>
       <!-- 用户名显示 -->
       <div v-if="currentUserName" class="current-user">
@@ -91,6 +98,7 @@ const maxRetries = ref(10) // 增加重试次数到10次
 const retryDelay = ref(3000) // 3秒重试间隔
 const isRetrying = ref(false)
 const showFailureMessage = ref(false)
+const showTelegramError = ref(false) // 显示Telegram用户信息获取失败的错误
 
 // 用户信息状态
 const currentUserName = ref('')
@@ -128,8 +136,10 @@ const loadCurrentUserName = async () => {
     })
   } catch (error) {
     debugLog.error('Loading页面 - 加载用户信息失败:', error)
-    currentUserName.value = 'Unknown User'
-    currentUserId.value = ''
+    showTelegramError.value = true
+    debugLog.error('显示Telegram用户信息获取失败错误消息')
+    // 不再设置默认值，直接显示错误
+    return
   }
 }
 
@@ -679,6 +689,15 @@ onUnmounted(() => {
 }
 
 .loading-page .failure-message {
+  color: #ff4757;
+  font-weight: bold;
+  font-size: 1rem;
+  margin-top: 0.5rem;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.loading-page .telegram-error-message {
   color: #ff4757;
   font-weight: bold;
   font-size: 1rem;
