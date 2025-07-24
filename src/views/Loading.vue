@@ -40,6 +40,13 @@
             <span class="dot"></span>
           </span>
         </li>
+        <!-- 失败消息 -->
+        <li 
+          v-if="showFailureMessage" 
+          class="failure-message active"
+        >
+          Connection failed, please check your network setups. If you are using VPN, check your VPN setups and open the miniapp again.
+        </li>
       </ul>
       <!-- 用户名显示 -->
       <div v-if="currentUserName" class="current-user">
@@ -76,12 +83,14 @@ const currentActiveIndex = ref(-1)
 const showFinalMessage = ref(false)
 const matchReceived = ref(false)
 const pageStartTime = ref(null)
+const canContinueAnimation = ref(false) // 控制动画是否可以继续
 
 // 重试逻辑状态
 const retryCount = ref(0)
 const maxRetries = ref(10) // 增加重试次数到10次
 const retryDelay = ref(3000) // 3秒重试间隔
 const isRetrying = ref(false)
+const showFailureMessage = ref(false)
 
 // 用户信息状态
 const currentUserName = ref('')
@@ -160,12 +169,29 @@ const startThinkingAnimation = () => {
       currentActiveIndex.value = index
       debugLog.log(`开始思考步骤 ${index + 1}: ${loadingMessages.value[index]}`)
       
-      // 每个步骤显示6-10秒随机时间
-      const stepDuration = 6000 + Math.random() * 4000
-      
-      setTimeout(() => {
-        animateNextStep(index + 1)
-      }, stepDuration)
+      // 如果是第一步，等待WebSocket连接和匹配信息
+      if (index === 0) {
+        // 停留在第一步，等待canContinueAnimation变为true
+        const waitForConnection = () => {
+          if (canContinueAnimation.value) {
+            // 可以继续下一步了
+            const stepDuration = 6000 + Math.random() * 4000
+            setTimeout(() => {
+              animateNextStep(index + 1)
+            }, stepDuration)
+          } else {
+            // 继续等待
+            setTimeout(waitForConnection, 1000)
+          }
+        }
+        waitForConnection()
+      } else {
+        // 其他步骤正常进行
+        const stepDuration = 6000 + Math.random() * 4000
+        setTimeout(() => {
+          animateNextStep(index + 1)
+        }, stepDuration)
+      }
     } else {
       debugLog.log('思考过程完成，等待30秒计时器')
       // 所有思考步骤完成后，标记为已完成
@@ -183,7 +209,8 @@ const startThinkingAnimation = () => {
 const retryMatch = () => {
   if (retryCount.value >= maxRetries.value) {
     debugLog.error('已达到最大重试次数，停止重试')
-    // 可以在这里显示错误信息给用户
+    isRetrying.value = false
+    showFailureMessage.value = true
     return
   }
   
@@ -336,6 +363,10 @@ function handleMatchSuccess(matchData) {
   matchReceived.value = true
   debugLog.log('匹配结果已收到并存储')
   
+  // 允许动画继续进行
+  canContinueAnimation.value = true
+  debugLog.log('动画可以继续进行到下一步')
+  
   // 匹配成功后，先断开匹配WebSocket连接
   debugLog.log('匹配成功，断开匹配WebSocket连接...')
   if (matchClient.value) {
@@ -366,7 +397,8 @@ function handleMatchError(errorData) {
     retryMatch()
   } else if (retryCount.value >= maxRetries.value) {
     debugLog.error('已达到最大重试次数，匹配失败')
-    // 这里可以显示用户友好的错误信息
+    isRetrying.value = false
+    showFailureMessage.value = true
   }
 }
 
@@ -620,6 +652,7 @@ onUnmounted(() => {
   font-size: 0.9rem;
   opacity: 0.3;
   transition: opacity 0.5s ease-in;
+  list-style: none;
 }
 
 .loading-page li.active {
@@ -643,6 +676,15 @@ onUnmounted(() => {
   font-weight: bold;
   font-size: 1rem;
   margin-top: 0.5rem;
+}
+
+.loading-page .failure-message {
+  color: #ff4757;
+  font-weight: bold;
+  font-size: 1rem;
+  margin-top: 0.5rem;
+  text-align: center;
+  line-height: 1.4;
 }
 
 .thinking-process {
