@@ -1,7 +1,7 @@
 <template>
   <div class="page-container profile-page">
     <!-- Profile 页面 -->
-    <h2>This is your profile</h2>
+    <h2>My Profile</h2>
     
     <!-- 加载状态 -->
     <div v-if="isLoading" class="loading">

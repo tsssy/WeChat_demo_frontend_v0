@@ -1,7 +1,7 @@
 <template>
   <div class="page-container mate-page">
     <!-- Mate 页面骨架 -->
-    <h2>Liked matches are shown below</h2>
+    <h2>Liked Matches</h2>
     <div class="mate-list">
       <!-- 动态渲染已like的match卡片 -->
       <MatchCard
