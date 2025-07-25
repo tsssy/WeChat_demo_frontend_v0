@@ -6,10 +6,12 @@
     <!-- 红点通知 -->
     <div v-if="hasUnreadMessage" class="red-dot"></div>
     
-    <!-- 左侧：匹配分数圆圈 -->
-    <div class="score-circle">
-      <div class="score-text">
-        {{ matchData.match_score || '?' }}
+    <!-- 左侧：用户头像圆圈 -->
+    <div class="score-section">
+      <div class="score-circle">
+        <div class="score-text">
+          {{ getUserInitial() }}
+        </div>
       </div>
     </div>
     
@@ -118,6 +120,17 @@ export default {
     // 隐藏红点（由管理器调用）
     hideRedDot() {
       this.hasUnreadMessage = false
+    },
+
+    // 获取用户首字母
+    getUserInitial() {
+      if (this.userData.telegram_user_name) {
+        const userName = this.userData.telegram_user_name;
+        // 如果第一个字符是@，使用第二个字符；否则使用第一个字符
+        const firstChar = userName.charAt(0) === '@' ? userName.charAt(1) : userName.charAt(0);
+        return firstChar.toUpperCase();
+      }
+      return `U${this.userId.toString().charAt(0).toUpperCase()}`;
     }
   }
 }
@@ -133,7 +146,7 @@ export default {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
-  gap: 16px;
+  gap: 24px; /* 从16px增加到24px，增加各部分之间的间距 */
   cursor: pointer;
   margin-bottom: 12px;
   position: relative;
@@ -144,7 +157,16 @@ export default {
   transform: translateY(-2px);
 }
 
-/* 左侧：匹配分数圆圈 */
+/* 左侧：用户头像区域 */
+.score-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  margin-right: 8px; /* 增加圆圈右边到description的距离 */
+}
+
+/* 左侧：用户头像圆圈 */
 .score-circle {
   width: 60px;
   height: 60px;
@@ -157,7 +179,7 @@ export default {
 }
 
 .score-text {
-  font-size: 18px;
+  font-size: 24px; /* 增大字体以显示首字母 */
   font-weight: 700;
   color: white;
 }
@@ -221,7 +243,11 @@ export default {
 @media (max-width: 480px) {
   .match-card {
     padding: 12px;
-    gap: 12px;
+    gap: 18px; /* 从12px增加到18px，与桌面端保持比例 */
+  }
+  
+  .score-section {
+    margin-right: 6px; /* 移动端对应的右边距 */
   }
   
   .score-circle {
@@ -230,7 +256,7 @@ export default {
   }
   
   .score-text {
-    font-size: 16px;
+    font-size: 20px; /* 移动端首字母字体大小 */
   }
   
   .user-name {
