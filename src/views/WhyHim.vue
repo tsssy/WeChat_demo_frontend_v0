@@ -19,7 +19,7 @@
       <h1 class="cupid-title">🎉 Cupid got your match！</h1>
       
       <!-- Name Card -->
-      <NameCard :userName="targetUserDisplayName" />
+      <NameCard :userName="targetUserDisplayName" :showOverlay="true" />
       
       <!-- Dynamic gender-based heading -->
       <h2 class="why-title">Why {{ targetGenderPronoun }}?</h2>
@@ -251,7 +251,7 @@ onMounted(() => {
   flex: 1;
   justify-content: center;
   padding: 2rem 1rem;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .loading-spinner {
