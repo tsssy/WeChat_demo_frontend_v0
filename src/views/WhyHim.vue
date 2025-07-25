@@ -19,7 +19,7 @@
       <h1 class="cupid-title">🎉 Cupid got your match！</h1>
       
       <!-- Name Card -->
-      <NameCard :userName="targetUserDisplayName" :showOverlay="true" />
+      <NameCard :userName="targetUserDisplayName" :showOverlay="showOverlay" />
       
       <!-- Dynamic gender-based heading -->
       <h2 class="why-title">Why {{ targetGenderPronoun }}?</h2>
@@ -59,6 +59,22 @@ const isLoading = ref(true)
 const error = ref(null)
 const matchInfo = ref(null)
 const targetUserInfo = ref(null)
+const showOverlay = ref(false)
+
+// Check if animation has been shown for this match
+const checkAnimationStatus = (matchId) => {
+  const seenAnimations = JSON.parse(localStorage.getItem('whyhim_seen_animations') || '[]')
+  return !seenAnimations.includes(matchId)
+}
+
+// Mark animation as seen for this match
+const markAnimationAsSeen = (matchId) => {
+  const seenAnimations = JSON.parse(localStorage.getItem('whyhim_seen_animations') || '[]')
+  if (!seenAnimations.includes(matchId)) {
+    seenAnimations.push(matchId)
+    localStorage.setItem('whyhim_seen_animations', JSON.stringify(seenAnimations))
+  }
+}
 
 // Computed properties
 const targetUserDisplayName = computed(() => {
@@ -154,6 +170,20 @@ const loadMatchData = async () => {
     error.value = err.message || 'Failed to load match information'
   } finally {
     isLoading.value = false
+    
+    // Check and set overlay animation status after loading
+    const current_match_id = userStore.current_match_id
+    if (current_match_id) {
+      const shouldShowAnimation = checkAnimationStatus(current_match_id)
+      showOverlay.value = shouldShowAnimation
+      
+      if (shouldShowAnimation) {
+        // Mark as seen after a short delay to ensure animation plays
+        setTimeout(() => {
+          markAnimationAsSeen(current_match_id)
+        }, 500)
+      }
+    }
   }
 }
 
