@@ -225,7 +225,7 @@ onUnmounted(() => {
 .trait-content p {
   line-height: 1.6;
   color: #555;
-  text-align: justify;
+  text-align: left;
   margin: 0;
   padding: 1rem;
   background: #DDEBE3;
