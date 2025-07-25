@@ -26,15 +26,15 @@
       <div v-if="!matchData.is_liked" class="user-description">
         {{ matchData.description_for_target || '暂无描述' }}
       </div>
-      
-      <!-- Mate页面（已喜欢）显示状态 -->
-      <div v-else class="mate-status">
-        💕 已喜欢
-      </div>
     </div>
     
-    <!-- 箭头 -->
-    <div class="match-arrow">
+    <!-- 已喜欢状态的爱心印章 -->
+    <div v-if="matchData.is_liked" class="love-stamp">
+      <img src="/media/Home/MatchCard/LoveStamp.svg" alt="Love Stamp" />
+    </div>
+    
+    <!-- 箭头 - 只在未喜欢状态下显示 -->
+    <div v-if="!matchData.is_liked" class="match-arrow">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
@@ -193,7 +193,8 @@ export default {
 .user-name {
   font-size: 18px;
   font-weight: 700;
-  color: #2c3e50;
+  color: #000; /* 改为黑色 */
+  font-family: "Crimson Text"; /* 设置字体系列 */
   margin-bottom: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -202,28 +203,42 @@ export default {
 
 .user-description {
   font-size: 14px;
-  color: #6c757d;
+  color: #858585; /* 改为指定的灰色 */
+  font-family: "Source Serif Pro"; /* 设置字体系列 */
+  font-style: normal; /* 设置字体样式 */
   word-wrap: break-word;
-}
-
-.mate-status {
-  font-size: 14px;
-  color: #28a745;
-  font-weight: 600;
-  background: rgba(40, 167, 69, 0.1);
-  padding: 4px 8px;
-  border-radius: 8px;
-  display: inline-block;
 }
 
 /* 右侧：箭头 */
 .match-arrow {
   color: #adb5bd;
   flex-shrink: 0;
+  position: relative; /* 确保箭头能够覆盖其他元素 */
+  z-index: 20; /* 设置高z-index确保在love-stamp之上 */
 }
 
 .match-card:hover .match-arrow {
   color: #fa86a4;
+}
+
+/* 爱心印章 - 已喜欢状态显示 */
+.love-stamp {
+  position: absolute;
+  bottom: 0; /* 完全贴合底部，无边距 */
+  right: 0; /* 完全贴合右侧，无边距 */
+  z-index: 10; /* 设置较低的z-index，确保在箭头下方 */
+  pointer-events: none; /* 不阻挡点击事件 */
+  height: 80%; /* 占据卡片80%的高度 */
+  display: flex;
+  align-items: flex-end; /* 图片底部对齐 */
+  justify-content: flex-end; /* 图片右侧对齐 */
+}
+
+.love-stamp img {
+  height: 100%; /* 填满容器高度 */
+  width: auto; /* 保持宽高比 */
+  opacity: 0.8; /* 稍微透明，让它更融入设计 */
+  border-radius: 0 0 15px 0; /* 考虑1px边框，调整为15px与内容区域圆角一致 */
 }
 
 /* 红点样式 */
@@ -261,10 +276,28 @@ export default {
   
   .user-name {
     font-size: 16px;
+    color: #000; /* 确保移动端也使用黑色 */
+    font-family: "Crimson Text"; /* 确保移动端也使用相同字体 */
   }
   
   .user-description {
     font-size: 13px;
+    color: #858585; /* 确保移动端也使用指定灰色 */
+    font-family: "Source Serif Pro"; /* 确保移动端也使用相同字体 */
+    font-style: normal; /* 确保移动端也使用相同字体样式 */
+  }
+  
+  /* 移动端爱心印章样式调整 */
+  .love-stamp {
+    bottom: 0; /* 移动端也完全贴合底部 */
+    right: 0; /* 移动端也完全贴合右侧 */
+    height: 80%; /* 移动端也占据80%高度 */
+  }
+  
+  .love-stamp img {
+    height: 100%; /* 移动端图片也填满容器高度 */
+    width: auto; /* 移动端也保持宽高比 */
+    border-radius: 0 0 15px 0; /* 移动端也调整为15px与内容区域圆角一致 */
   }
 }
 </style> 
