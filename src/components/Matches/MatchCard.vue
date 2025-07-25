@@ -207,6 +207,7 @@ export default {
   font-family: "Source Serif Pro"; /* 设置字体系列 */
   font-style: normal; /* 设置字体样式 */
   word-wrap: break-word;
+  text-align: justify; /* 添加两端对齐 */
 }
 
 /* 右侧：箭头 */
@@ -285,6 +286,7 @@ export default {
     color: #858585; /* 确保移动端也使用指定灰色 */
     font-family: "Source Serif Pro"; /* 确保移动端也使用相同字体 */
     font-style: normal; /* 确保移动端也使用相同字体样式 */
+    text-align: justify; /* 移动端也使用两端对齐 */
   }
   
   /* 移动端爱心印章样式调整 */
