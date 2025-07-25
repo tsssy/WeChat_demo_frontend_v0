@@ -2,7 +2,9 @@
   <div class="page-container no-bottom-nav chatroom-page">
     <!-- 聊天室页面骨架 -->
     <div class="chatroom-header">
-      <button class="close-btn" @click="closeChat">×</button>
+      <button class="close-btn" @click="closeChat">
+        <img src="/media/Chatroom/Quit.svg" alt="Quit" class="quit-icon" />
+      </button>
       <span class="chat-username">{{ chatUsername }}</span>
       <button class="like-btn" @click="toggleLike" :disabled="isAnimating">
         <img 
@@ -638,7 +640,7 @@ function closeChat() {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #C8C8C8;
   background: transparent;
   position: sticky;
   top: 0;
@@ -657,13 +659,25 @@ function closeChat() {
 }
 
 .close-btn {
-  background: #eee;
-  padding: 8px 16px;
-  font-size: 0.9rem;
+  background: transparent;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .close-btn:hover {
-  background: #ddd;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.quit-icon {
+  width: 32px;
+  height: 32px;
+  transition: transform 0.2s;
+}
+
+.close-btn:hover .quit-icon {
+  transform: scale(1.1);
 }
 
 .like-btn:hover:not(:disabled) {
@@ -712,12 +726,14 @@ function closeChat() {
   transform-origin: center center;
 }
 .chat-username {
-  font-size: 1.2rem;
-  line-height: 26.4px;
+  font-size: 1.5rem;
   font-weight: 600;
   font-family: 'Crimson Text';
   color: #000;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .loading-state, .error-state {
@@ -780,7 +796,7 @@ function closeChat() {
 }
 .chat-messages {
   flex: 1;
-  padding: 16px;
+  padding: 16px 23px;
   overflow-y: auto;
   background: transparent;
   display: flex;
@@ -791,11 +807,13 @@ function closeChat() {
 .chat-input-bar {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
+  padding: 8px 23px calc(8px + env(safe-area-inset-bottom)) 23px;
   border-top: 1px solid #eee;
   background: #fff;
   position: sticky;
   bottom: 0;
+  height: calc(80px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
 }
 .chat-input-bar input {
   flex: 1;
@@ -804,6 +822,7 @@ function closeChat() {
   padding: 10px 16px;
   margin-right: 8px;
   font-size: 1rem;
+  font-family: Nunito;
   outline: none;
 }
 

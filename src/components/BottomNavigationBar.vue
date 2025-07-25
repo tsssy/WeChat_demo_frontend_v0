@@ -102,6 +102,8 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-around;
   padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+  height: calc(80px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
   z-index: 1000;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
 }
