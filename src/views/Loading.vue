@@ -775,8 +775,9 @@ onUnmounted(() => {
 .current-user {
   position: absolute;
   bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  width: 100%;
   text-align: center;
   opacity: 0.8;
 }
