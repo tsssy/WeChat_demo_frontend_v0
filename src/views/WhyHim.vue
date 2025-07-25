@@ -18,10 +18,8 @@
       <!-- 新的标题 -->
       <h1 class="cupid-title">🎉 Cupid got your match！</h1>
       
-      <!-- 卡片placeholder -->
-      <div class="match-card-placeholder">
-        <p>Match Card Placeholder</p>
-      </div>
+      <!-- Name Card -->
+      <NameCard :userName="targetUserDisplayName" />
       
       <!-- Dynamic gender-based heading -->
       <h2 class="why-title">Why {{ targetGenderPronoun }}?</h2>
@@ -48,6 +46,7 @@ import { useUserStore } from '../stores/user.js'
 import { APIServices } from '../services/APIServices.js'
 import { debugLog } from '../utils/debug.js'
 import Toast from '../components/Toast.vue'
+import NameCard from '../components/NameCard.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -297,24 +296,6 @@ onMounted(() => {
   color: #FE6A80;
   font-family: "Anonymous Pro", monospace;
   font-size: 1.5rem;
-  margin: 0;
-}
-
-.match-card-placeholder {
-  width: 80%;
-  height: 200px;
-  background: #f5f5f5;
-  border: 2px dashed #ccc;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 1rem 0;
-}
-
-.match-card-placeholder p {
-  color: #999;
-  font-size: 1rem;
   margin: 0;
 }
 
