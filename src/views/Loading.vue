@@ -636,6 +636,7 @@ onUnmounted(() => {
   font-family: "Anonymous Pro", "Courier New", Consolas, Monaco, monospace;
   font-size: 20px;
   font-style: normal;
+  font-weight: bold;
   margin: 60px 0 0 0;
   flex-shrink: 0;
 }
@@ -650,6 +651,7 @@ onUnmounted(() => {
   font-family: "Anonymous Pro", "Courier New", Consolas, Monaco, monospace;
   font-size: 15px;
   font-style: normal;
+  font-weight: bold;
   opacity: 0.3;
   transition: opacity 0.5s ease-in;
   list-style: none;
@@ -670,7 +672,7 @@ onUnmounted(() => {
   font-family: "Anonymous Pro", "Courier New", Consolas, Monaco, monospace;
   font-size: 15px;
   font-style: normal;
-  font-weight: 500;
+  font-weight: bold;
   margin-top: 0.3rem;
   text-align: center;
 }
@@ -762,6 +764,7 @@ onUnmounted(() => {
   font-family: "Anonymous Pro", "Courier New", Consolas, Monaco, monospace;
   font-size: 15px;
   font-style: normal;
+  font-weight: bold;
   margin: 0.8rem 0 0 0;
   flex-shrink: 0;
   text-align: center;
@@ -780,14 +783,14 @@ onUnmounted(() => {
 .user-name {
   font-size: 0.9rem;
   color: #FFF;
-  font-weight: 500;
+  font-weight: bold;
   margin-bottom: 2px;
 }
 
 .user-id {
   font-size: 0.7rem;
   color: #FFF;
-  font-weight: 300;
+  font-weight: bold;
   opacity: 0.6;
   font-family: "Anonymous Pro", "Courier New", Consolas, Monaco, monospace;
   letter-spacing: 0.5px;
