@@ -175,11 +175,6 @@ function onPrivateMessage(payload) {
   max-width: 100%;
 }
 
-@media (min-width: 768px) {
-  .match-list {
-    max-width: 380px;
-  }
-}
 .match-card {
   background: #f8f8f8;
   border-radius: 16px;

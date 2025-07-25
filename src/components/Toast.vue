@@ -62,15 +62,6 @@ defineExpose({
   font-size: 14px;
 }
 
-@media (min-width: 768px) {
-  .toast {
-    left: auto;
-    right: 20px;
-    transform: none;
-    min-width: 300px;
-    max-width: 400px;
-  }
-}
 
 .toast-content {
   display: flex;

@@ -305,11 +305,6 @@ onMounted(() => {
   margin: 0;
 }
 
-@media (min-width: 768px) {
-  .cupid-title {
-    font-size: 2rem;
-  }
-}
 
 /* 卡片placeholder样式 */
 .match-card-placeholder {
@@ -342,11 +337,6 @@ onMounted(() => {
   margin: 0;
 }
 
-@media (min-width: 768px) {
-  .why-title {
-    font-size: 2rem;
-  }
-}
 
 /* 理由文字样式 */
 .match-reason {
@@ -361,12 +351,6 @@ onMounted(() => {
   padding: 0 1rem;
 }
 
-@media (min-width: 768px) {
-  .match-reason {
-    max-width: 400px;
-    font-size: 1.1rem;
-  }
-}
 
 /* Chat Now按钮样式 */
 .chat-now-btn {
@@ -392,13 +376,6 @@ onMounted(() => {
   transform: translateY(-2px);
 }
 
-@media (min-width: 768px) {
-  .chat-now-btn {
-    height: 80px;
-    border-radius: 40px;
-    font-size: 1.2rem;
-  }
-}
 
 /* Other Matches按钮样式 */
 .other-matches-btn {
@@ -424,11 +401,4 @@ onMounted(() => {
   transform: translateY(-2px);
 }
 
-@media (min-width: 768px) {
-  .other-matches-btn {
-    height: 80px;
-    border-radius: 40px;
-    font-size: 1.2rem;
-  }
-}
 </style> 

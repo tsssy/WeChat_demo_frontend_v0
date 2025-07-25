@@ -47,9 +47,4 @@ const props = defineProps({
   margin: 0;
 }
 
-@media (min-width: 768px) {
-  .message-box {
-    max-width: 300px;
-  }
-}
 </style>

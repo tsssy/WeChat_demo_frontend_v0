@@ -54,28 +54,3 @@ a,
   }
 }
 
-/* Desktop styles - max width constraints */
-@media (min-width: 768px) {
-  body {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    background: linear-gradient(180deg, #FFE4DC 0%, #FFB7B4 100%);
-    padding: 20px 0;
-    min-height: 100vh;
-  }
-
-  #app {
-    width: 100%;
-    max-width: 430px;
-    margin: 0 auto;
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
-    border-radius: 12px;
-    overflow: hidden;
-    background: transparent;
-  }
-  
-  .page-container {
-    padding: 20px;
-  }
-}

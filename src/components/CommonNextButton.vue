@@ -40,10 +40,4 @@
   transform: translateY(0);
 }
 
-@media (min-width: 768px) {
-  .button {
-    font-size: 20px;
-    padding: 16px 40px;
-    min-height: 52px;
-  }
-}</style>
+</style>

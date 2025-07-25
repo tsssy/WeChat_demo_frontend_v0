@@ -625,15 +625,6 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-@media (min-width: 768px) {
-  .loading-container {
-    width: 430px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-radius: 12px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
-  }
-}
 
 .loading-page h2 {
   font-size: 1.5rem;
@@ -651,16 +642,6 @@ onUnmounted(() => {
   max-height: 40vh;
 }
 
-@media (min-width: 768px) {
-  .loading-page ul {
-    max-width: 320px;
-    max-height: 30vh;
-  }
-  
-  .loading-page h2 {
-    font-size: 1.8rem;
-  }
-}
 
 .loading-page li {
   margin-bottom: 0.4rem;
@@ -722,12 +703,6 @@ onUnmounted(() => {
   max-height: 40vh;
 }
 
-@media (min-width: 768px) {
-  .thinking-process {
-    max-width: 320px;
-    max-height: 30vh;
-  }
-}
 
 .typing-dots {
   display: inline-block;
@@ -814,17 +789,4 @@ onUnmounted(() => {
   letter-spacing: 0.5px;
 }
 
-@media (min-width: 768px) {
-  .current-user {
-    bottom: 30px;
-  }
-  
-  .user-name {
-    font-size: 1rem;
-  }
-  
-  .user-id {
-    font-size: 0.75rem;
-  }
-}
 </style> 

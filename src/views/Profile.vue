@@ -271,14 +271,4 @@ onUnmounted(() => {
   color: #34495e;
 }
 
-@media (min-width: 768px) {
-  .trait-section, .stats-section {
-    max-width: 500px;
-    align-self: center;
-  }
-  
-  .profile-info {
-    max-width: 400px;
-  }
-}
 </style>

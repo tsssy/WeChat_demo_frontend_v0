@@ -108,16 +108,6 @@ onUnmounted(() => {
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
 }
 
-@media (min-width: 768px) {
-  .bottom-nav {
-    left: 50%;
-    transform: translateX(-50%);
-    width: 430px;
-    border-radius: 0 0 12px 12px;
-    border-left: 1px solid #eee;
-    border-right: 1px solid #eee;
-  }
-}
 .nav-item {
   display: flex;
   flex-direction: column;
@@ -133,12 +123,6 @@ onUnmounted(() => {
   position: relative;
 }
 
-@media (min-width: 768px) {
-  .nav-item {
-    font-size: 14px;
-    padding: 10px 6px;
-  }
-}
 
 .nav-item.active {
   color: #ff6b81;
@@ -171,11 +155,6 @@ onUnmounted(() => {
   justify-content: center;
 }
 
-@media (min-width: 768px) {
-  .nav-icon {
-    font-size: 22px;
-  }
-}
 
 /* SVG图标样式 */
 .nav-svg {
@@ -184,12 +163,6 @@ onUnmounted(() => {
   transition: all 0.3s ease;
 }
 
-@media (min-width: 768px) {
-  .nav-svg {
-    width: 26px;
-    height: 26px;
-  }
-}
 
 
 

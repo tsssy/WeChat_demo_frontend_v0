@@ -173,11 +173,6 @@ function onPrivateMessage(payload) {
   max-width: 100%;
 }
 
-@media (min-width: 768px) {
-  .mate-list {
-    max-width: 380px;
-  }
-}
 .mate-card {
   background: #f8f8f8;
   border-radius: 16px;
