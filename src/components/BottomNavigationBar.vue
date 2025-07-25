@@ -2,13 +2,17 @@
   <div class="bottom-nav">
     <!-- Match Tab -->
     <div class="nav-item" :class="{ active: activeTab === 'match' }" @click="navigateTo('match')">
-      <div class="nav-icon">💬</div>
+      <div class="nav-icon">
+        <img src="/media/navigation_bar/Matches.svg" alt="Match" class="nav-svg" />
+      </div>
       <div class="nav-label">Match</div>
     </div>
     <!-- Mate Tab -->
     <div class="nav-item" :class="{ active: activeTab === 'mate' }" @click="navigateTo('mate')">
       <div class="nav-icon-container">
-        <div class="nav-icon">❤️</div>
+        <div class="nav-icon">
+          <img src="/media/navigation_bar/Mates.svg" alt="Mates" class="nav-svg" />
+        </div>
         <!-- Mates按钮红点 -->
         <div v-if="hasMatesRedDot" class="mates-red-dot"></div>
       </div>
@@ -16,7 +20,9 @@
     </div>
     <!-- Profile Tab -->
     <div class="nav-item" :class="{ active: activeTab === 'profile' }" @click="navigateTo('profile')">
-      <div class="nav-icon">👤</div>
+      <div class="nav-icon">
+        <img src="/media/navigation_bar/Profile.svg" alt="Profile" class="nav-svg" />
+      </div>
       <div class="nav-label">Profile</div>
     </div>
   </div>
@@ -158,6 +164,9 @@ onUnmounted(() => {
 .nav-icon {
   font-size: 20px;
   margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @media (min-width: 768px) {
@@ -165,6 +174,23 @@ onUnmounted(() => {
     font-size: 22px;
   }
 }
+
+/* SVG图标样式 */
+.nav-svg {
+  width: 24px;
+  height: 24px;
+  transition: all 0.3s ease;
+}
+
+@media (min-width: 768px) {
+  .nav-svg {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+
+
 /* Mates按钮红点样式 */
 .nav-icon-container {
   position: relative;

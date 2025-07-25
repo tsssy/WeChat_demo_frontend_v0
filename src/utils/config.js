@@ -18,7 +18,7 @@ export const DEBUG_CONFIG = {
 // ======= USER_ID覆盖配置 =======
 // 用于调试时使用自定义user_id
 export const USER_ID_OVERRIDE = {
-  enabled: false, // 设为true时启用自定义user_id覆盖
+  enabled: true, // 设为true时启用自定义user_id覆盖
   userId: 1000001 // 当enabled为true时使用的自定义user_id
 }
 
