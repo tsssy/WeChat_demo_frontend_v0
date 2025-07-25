@@ -2,8 +2,7 @@
   <div class="loading-container">
     <div class="loading-page">
       <!-- 加载页面骨架 -->
-      <h2>Finding your new match</h2>
-      <div class="loading-spinner"></div>
+      <h2>Finding your match....</h2>
       <ul class="thinking-process">
         <li 
           v-for="(message, index) in loadingMessages" 
@@ -609,6 +608,11 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   background: #fff;
+  /* 添加Loading.gif作为背景图片，高度与屏幕对齐 */
+  background-image: url('/media/Loading/Loading.gif');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .loading-page {
@@ -617,8 +621,8 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  color: #222;
+  justify-content: space-between;
+  color: #FFF;
   text-align: center;
   padding: 1rem;
   box-sizing: border-box;
@@ -627,29 +631,29 @@ onUnmounted(() => {
 
 
 .loading-page h2 {
-  font-size: 1.5rem;
-  margin: 0 0 0.8rem 0;
+  color: #FFF;
+  text-align: center;
+  font-family: "Anonymous Pro", "Courier New", Consolas, Monaco, monospace;
+  font-size: 20px;
+  font-style: normal;
+  margin: 60px 0 0 0;
   flex-shrink: 0;
 }
 
-.loading-page ul {
-  width: 100%;
-  text-align: left;
-  padding: 0 1rem;
-  margin: 0.8rem 0;
-  flex: 1;
-  overflow-y: auto;
-  max-height: 40vh;
-}
+
 
 
 .loading-page li {
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.3rem;
   line-height: 1.3;
-  font-size: 0.9rem;
+  color: #FFF;
+  font-family: "Anonymous Pro", "Courier New", Consolas, Monaco, monospace;
+  font-size: 15px;
+  font-style: normal;
   opacity: 0.3;
   transition: opacity 0.5s ease-in;
   list-style: none;
+  text-align: center;
 }
 
 .loading-page li.active {
@@ -662,23 +666,31 @@ onUnmounted(() => {
 }
 
 .loading-page .retry-message {
-  color: #ff9500;
+  color: #FFF;
+  font-family: "Anonymous Pro", "Courier New", Consolas, Monaco, monospace;
+  font-size: 15px;
+  font-style: normal;
   font-weight: 500;
-  font-size: 0.95rem;
   margin-top: 0.3rem;
+  text-align: center;
 }
 
 .loading-page .final-message {
-  color: #ff6b81;
+  color: #FFF;
+  font-family: "Anonymous Pro", "Courier New", Consolas, Monaco, monospace;
+  font-size: 15px;
+  font-style: normal;
   font-weight: bold;
-  font-size: 1rem;
   margin-top: 0.5rem;
+  text-align: center;
 }
 
 .loading-page .failure-message {
   color: #ff4757;
+  font-family: "Anonymous Pro", "Courier New", Consolas, Monaco, monospace;
+  font-size: 15px;
+  font-style: normal;
   font-weight: bold;
-  font-size: 1rem;
   margin-top: 0.5rem;
   text-align: center;
   line-height: 1.4;
@@ -686,8 +698,10 @@ onUnmounted(() => {
 
 .loading-page .telegram-error-message {
   color: #ff4757;
+  font-family: "Anonymous Pro", "Courier New", Consolas, Monaco, monospace;
+  font-size: 15px;
+  font-style: normal;
   font-weight: bold;
-  font-size: 1rem;
   margin-top: 0.5rem;
   text-align: center;
   line-height: 1.4;
@@ -695,12 +709,13 @@ onUnmounted(() => {
 
 .thinking-process {
   width: 100%;
-  text-align: left;
+  text-align: center;
   padding: 0 1rem;
-  margin: 0.8rem 0;
+  margin: 0 0 0px 0;
   flex: 1;
   overflow-y: auto;
   max-height: 40vh;
+  align-self: flex-end;
 }
 
 
@@ -743,49 +758,38 @@ onUnmounted(() => {
 }
 
 .loading-page p {
-  font-size: 0.9rem;
+  color: #FFF;
+  font-family: "Anonymous Pro", "Courier New", Consolas, Monaco, monospace;
+  font-size: 15px;
+  font-style: normal;
   margin: 0.8rem 0 0 0;
   flex-shrink: 0;
+  text-align: center;
 }
 
-.loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #eee;
-  border-top: 3px solid #a0a0ff;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 1rem 0;
-  flex-shrink: 0;
-}
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
 
 .current-user {
   position: absolute;
   bottom: 20px;
   left: 50%;
-  transform: translateX(-50%);
   text-align: center;
   opacity: 0.8;
 }
 
 .user-name {
   font-size: 0.9rem;
-  color: #666;
+  color: #FFF;
   font-weight: 500;
   margin-bottom: 2px;
 }
 
 .user-id {
   font-size: 0.7rem;
-  color: #999;
+  color: #FFF;
   font-weight: 300;
   opacity: 0.6;
-  font-family: 'Courier New', monospace;
+  font-family: "Anonymous Pro", "Courier New", Consolas, Monaco, monospace;
   letter-spacing: 0.5px;
 }
 
