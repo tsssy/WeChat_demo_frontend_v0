@@ -10,8 +10,8 @@
         :matchData="match"
         @card-click="goToWhyHim(match)"
       />
-      <div v-if="isLoading" class="loading">加载中...</div>
-      <div v-if="!isLoading && likedMatches.length === 0" class="empty">暂无已喜欢的对象</div>
+      <div v-if="isLoading" class="loading">Loading...</div>
+      <div v-if="!isLoading && likedMatches.length === 0" class="empty">No liked matches</div>
     </div>
   </div>
 </template>
@@ -240,5 +240,14 @@ function onPrivateMessage(payload) {
   top: 16px;
   right: 16px;
   text-transform: uppercase;
+}
+
+/* 加载和空状态样式 */
+.loading, .empty {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.1rem;
+  color: #666;
+  font-family: 'Anonymous Pro', monospace;
 }
 </style> 
