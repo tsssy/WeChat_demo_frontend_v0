@@ -115,7 +115,7 @@ onUnmounted(() => {
 
 <style scoped>
 .profile-page {
-  background: #fff;
+  background: transparent;
   color: #222;
   display: flex;
   flex-direction: column;

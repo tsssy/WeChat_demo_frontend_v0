@@ -161,7 +161,7 @@ function onPrivateMessage(payload) {
 
 <style scoped>
 .match-page {
-  background: #fff;
+  background: transparent;
   color: #222;
   display: flex;
   flex-direction: column;

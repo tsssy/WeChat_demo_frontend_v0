@@ -159,7 +159,7 @@ function onPrivateMessage(payload) {
 
 <style scoped>
 .mate-page {
-  background: #fff;
+  background: transparent;
   color: #222;
   display: flex;
   flex-direction: column;

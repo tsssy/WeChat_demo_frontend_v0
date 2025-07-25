@@ -4,7 +4,13 @@
     <div class="chatroom-header">
       <button class="close-btn" @click="closeChat">×</button>
       <span class="chat-username">{{ chatUsername }}</span>
-      <button class="like-btn" @click="toggleLike">{{ isLiked ? 'Unlike' : 'Like' }}</button>
+      <button class="like-btn" @click="toggleLike" :disabled="isAnimating">
+        <img 
+          :src="isLiked ? '/media/Chatroom/Heart/Liked State.svg' : '/media/Chatroom/Heart/Unliked State.svg'" 
+          alt="Like"
+          :class="['heart-icon', { 'animating': isAnimating }]"
+        />
+      </button>
       <!-- Like/Unlike 按钮，后续可切换 -->
     </div>
     <!-- WebSocket 连接中状态 -->
@@ -87,6 +93,9 @@ const chatUsername = ref('Someone Special')
 const messageInput = ref('')
 const isSending = ref(false)
 const wsConnecting = ref(false) // WebSocket 连接中状态
+
+// 点赞动画相关状态
+const isAnimating = ref(false)
 
 // WebSocket client
 const messageClient = ref(null)
@@ -557,6 +566,23 @@ onUnmounted(() => {
   }
 })
 
+// 播放点赞动画
+async function playLikeAnimation() {
+  isAnimating.value = true
+  
+  // 在动画60%时切换到liked状态（0.72s），正好在缩小完成、准备突然放大时
+  setTimeout(async () => {
+    // 重新获取匹配信息以确保状态同步
+    await loadMatchInfo()
+  }, 720)
+  
+  // 等待1.2s让CSS动画完成，然后切换状态
+  setTimeout(() => {
+    isAnimating.value = false
+    toast.value?.show('已点赞', 'success')
+  }, 1200)
+}
+
 // Like/Unlike按钮点击逻辑，调用toggle_like接口
 async function toggleLike() {
   try {
@@ -566,12 +592,21 @@ async function toggleLike() {
       toast.value?.show('无法获取匹配ID，无法点赞', 'error')
       return
     }
-    // 调用toggleLike接口
+    
+    // 如果当前是未点赞状态，且即将变为点赞状态，播放动画
+    const wasLiked = isLiked.value
+    
+        // 调用toggleLike接口
     const res = await APIServices.toggleLike({ match_id })
     if (res && res.success) {
-      // 重新获取匹配信息以确保状态同步
-      await loadMatchInfo()
-      toast.value?.show(isLiked.value ? '已点赞' : '已取消点赞', 'success')
+      // 如果从未点赞变为点赞，播放动画
+      if (!wasLiked) {
+        playLikeAnimation()
+      } else {
+        // 如果是取消点赞，直接更新状态
+        await loadMatchInfo()
+        toast.value?.show('已取消点赞', 'success')
+      }
     } else {
       toast.value?.show('操作失败，请稍后重试', 'error')
     }
@@ -592,7 +627,7 @@ function closeChat() {
 
 <style scoped>
 .chatroom-page {
-  background: #fff;
+  background: transparent;
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -604,27 +639,85 @@ function closeChat() {
   justify-content: space-between;
   padding: 12px 16px;
   border-bottom: 1px solid #eee;
-  background: #fff;
+  background: transparent;
   position: sticky;
   top: 0;
   z-index: 10;
 }
 .close-btn, .like-btn {
-  background: #eee;
+  background: transparent;
   border: none;
   border-radius: 16px;
-  padding: 8px 16px;
-  font-size: 0.9rem;
+  padding: 8px;
   cursor: pointer;
   transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.close-btn:hover, .like-btn:hover {
+.close-btn {
+  background: #eee;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+}
+
+.close-btn:hover {
   background: #ddd;
 }
+
+.like-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.like-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.heart-icon {
+  width: 32px;
+  height: 32px;
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 点赞动画：左转45度 → 右转405度 → 缩小 → 突然放大120% → 回到100% */
+@keyframes likeAnimation {
+  0% { 
+    transform: scale(1) rotate(0deg);
+  }
+  15% { 
+    transform: scale(1) rotate(-45deg);
+  }
+  45% { 
+    transform: scale(1) rotate(360deg);
+  }
+  60% { 
+    transform: scale(0.2) rotate(360deg);
+  }
+  65% { 
+    transform: scale(1.3) rotate(360deg);
+  }
+  80% { 
+    transform: scale(0.95) rotate(360deg);
+  }
+  100% { 
+    transform: scale(1) rotate(360deg);
+  }
+}
+
+/* 为动画中的图标应用动画 */
+.heart-icon.animating {
+  animation: likeAnimation 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform-origin: center center;
+}
 .chat-username {
-  font-weight: bold;
   font-size: 1.2rem;
+  line-height: 26.4px;
+  font-weight: 600;
+  font-family: 'Crimson Text';
+  color: #000;
+  text-align: center;
 }
 
 .loading-state, .error-state {
@@ -689,7 +782,7 @@ function closeChat() {
   flex: 1;
   padding: 16px;
   overflow-y: auto;
-  background: #f8f8f8;
+  background: transparent;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -715,7 +808,7 @@ function closeChat() {
 }
 
 .chat-input-bar input:focus {
-  border-color: #007bff;
+  border-color: #6BB394;
 }
 
 .chat-input-bar input:disabled {
@@ -725,7 +818,7 @@ function closeChat() {
 }
 
 .send-btn {
-  background: #007bff;
+  background: #6BB394;
   color: #fff;
   border: none;
   border-radius: 50%;
@@ -740,11 +833,29 @@ function closeChat() {
 }
 
 .send-btn:hover:not(:disabled) {
-  background: #0056b3;
+  background: #4F9173;
 }
 
 .send-btn:disabled {
-  background: #ccc;
+  background: #C0DFCF;
   cursor: not-allowed;
+}
+
+/* 消息框样式定义 */
+:deep(.message-box.self) {
+  background: #C0DFCF !important;
+  border-radius: 50px !important;
+}
+
+:deep(.message-box.other) {
+  background: #F8F8F8 !important;
+  border-radius: 50px !important;
+}
+
+/* 聊天框内字体样式 */
+:deep(.message-box .message-content) {
+  text-align: left;
+  color: #000;
+  font-family: Nunito;
 }
 </style> 

@@ -70,7 +70,7 @@ onUnmounted(() => {
 <style>
 .app-container {
   min-height: 100vh;
-  background: #fff;
+  background: linear-gradient(180deg, #FFE4DC 0%, #FFB7B4 100%);
   position: relative;
 }
 </style>
