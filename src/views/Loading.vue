@@ -776,6 +776,7 @@ onUnmounted(() => {
   position: absolute;
   bottom: 20px;
   left: 50%;
+  transform: translateX(-50%);
   text-align: center;
   opacity: 0.8;
 }
