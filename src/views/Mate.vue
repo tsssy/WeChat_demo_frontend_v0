@@ -1,7 +1,7 @@
 <template>
   <div class="page-container mate-page">
     <!-- Mate 页面骨架 -->
-    <h2>Liked Matches</h2>
+    <PageTitle title="Liked Matches" />
     <div class="mate-list">
       <!-- 动态渲染已like的match卡片 -->
       <MatchCard
@@ -23,6 +23,7 @@ import { useUserStore } from '../stores/user.js'
 import { APIServices } from '../services/APIServices.js'
 import WebSocketClientSingleton from '../wsclients/WebSocketClient.js'
 import MatchCard from '../components/Matches/MatchCard.vue'
+import PageTitle from '../components/PageTitle.vue'
 import eventBus from '../utils/eventBus.js' // 引入全局事件总线
 import { getMessageWebSocketUrl } from '@/utils/config.js' // 引入全局WebSocket地址配置
 import { matchCardManager } from '@/utils/matchCardManager.js' // 引入MatchCard管理器
@@ -166,12 +167,7 @@ function onPrivateMessage(payload) {
   align-items: stretch;
 }
 
-.mate-page h2 {
-  font-size: 1.8rem;
-  margin-bottom: 1.5rem;
-  text-align: center;
-  align-self: center;
-}
+
 .mate-list {
   width: 100%;
   max-width: 100%;

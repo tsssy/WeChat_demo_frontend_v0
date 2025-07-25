@@ -1,7 +1,7 @@
 <template>
   <div class="page-container match-page">
     <!-- Match 页面骨架 -->
-    <h2>Matches for you</h2>
+    <PageTitle title="Matches for you" />
     <div class="match-list">
       <!-- 动态渲染未like的match卡片 -->
       <MatchCard
@@ -23,6 +23,7 @@ import { useUserStore } from '../stores/user.js'
 import { APIServices } from '../services/APIServices.js'
 import WebSocketClientSingleton from '../wsclients/WebSocketClient.js'
 import MatchCard from '../components/Matches/MatchCard.vue'
+import PageTitle from '../components/PageTitle.vue'
 import eventBus from '../utils/eventBus.js' // 引入全局事件总线
 import { getMessageWebSocketUrl } from '@/utils/config.js' // 引入全局WebSocket地址配置
 import { matchCardManager } from '@/utils/matchCardManager.js' // 引入MatchCard管理器
@@ -168,12 +169,7 @@ function onPrivateMessage(payload) {
   align-items: stretch;
 }
 
-.match-page h2 {
-  font-size: 1.8rem;
-  margin-bottom: 1.5rem;
-  text-align: center;
-  align-self: center;
-}
+
 .match-list {
   width: 100%;
   max-width: 100%;

@@ -1,7 +1,7 @@
 <template>
   <div class="page-container profile-page">
     <!-- Profile 页面 -->
-    <h2>My Profile</h2>
+    <PageTitle title="My Profile" />
     
     <!-- 加载状态 -->
     <div v-if="isLoading" class="loading">
@@ -51,6 +51,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useUserStore } from '@/stores/user.js'
 import { APIServices } from '@/services/APIServices.js'
+import PageTitle from '../components/PageTitle.vue'
 import eventBus from '../utils/eventBus.js'
 
 // Store
@@ -123,12 +124,7 @@ onUnmounted(() => {
   padding: 1rem;
 }
 
-.profile-page h2 {
-  font-size: 1.8rem;
-  margin-bottom: 1.5rem;
-  text-align: center;
-  align-self: center;
-}
+
 
 /* 加载状态 */
 .loading {
