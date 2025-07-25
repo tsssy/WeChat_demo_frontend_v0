@@ -16,7 +16,7 @@
     <!-- Content when loaded -->
     <div v-else class="match-content">
       <!-- 新的标题 -->
-      <h1 class="cupid-title">🎉 Cupid find your match！</h1>
+      <h1 class="cupid-title">🎉 Cupid got your match！</h1>
       
       <!-- 卡片placeholder -->
       <div class="match-card-placeholder">
@@ -251,7 +251,6 @@ onMounted(() => {
   align-items: center;
   flex: 1;
   justify-content: center;
-  max-width: 100%;
   padding: 2rem 1rem;
   gap: 1.5rem;
 }
@@ -294,22 +293,15 @@ onMounted(() => {
   background: #0056b3;
 }
 
-/* 新的标题样式 */
 .cupid-title {
   color: #FE6A80;
-  text-align: center;
   font-family: "Anonymous Pro", monospace;
-  font-style: normal;
-  line-height: normal;
   font-size: 1.5rem;
   margin: 0;
 }
 
-
-/* 卡片placeholder样式 */
 .match-card-placeholder {
-  width: 100%;
-  max-width: 300px;
+  width: 80%;
   height: 200px;
   background: #f5f5f5;
   border: 2px dashed #ccc;
@@ -326,49 +318,38 @@ onMounted(() => {
   margin: 0;
 }
 
-/* Why him/her标题样式 */
 .why-title {
   color: #616161;
-  text-align: center;
   font-family: "Crimson Text", serif;
-  font-style: normal;
-  line-height: normal;
   font-size: 1.6rem;
   margin: 0;
 }
 
-
-/* 理由文字样式 */
 .match-reason {
   color: #000;
-  text-align: center;
   font-family: "Source Serif Pro", serif;
-  font-style: normal;
   line-height: 1.5;
   font-size: 1rem;
-  max-width: 100%;
   margin: 0;
-  padding: 0 1rem;
+  padding: 0;
+  width: 80%;
 }
 
-
-/* Chat Now按钮样式 */
-.chat-now-btn {
-  width: 70%;
+.chat-now-btn, .other-matches-btn {
+  width: 80%;
   height: 60px;
   border-radius: 30px;
-  background: #FE6A80;
   border: none;
   cursor: pointer;
   transition: all 0.3s;
-  
   color: #FFF;
-  text-align: center;
   font-family: "Anonymous Pro", monospace;
-  font-style: normal;
-  line-height: normal;
   font-size: 1rem;
   font-weight: bold;
+}
+
+.chat-now-btn {
+  background: #FE6A80;
 }
 
 .chat-now-btn:hover {
@@ -376,29 +357,12 @@ onMounted(() => {
   transform: translateY(-2px);
 }
 
-
-/* Other Matches按钮样式 */
 .other-matches-btn {
-  width: 70%;
-  height: 60px;
-  border-radius: 30px;
   background: #C0DFCF;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s;
-  
-  color: #FFF;
-  text-align: center;
-  font-family: "Anonymous Pro", monospace;
-  font-style: normal;
-  line-height: normal;
-  font-size: 1rem;
-  font-weight: bold;
 }
 
 .other-matches-btn:hover {
   background: #b0cfbf;
   transform: translateY(-2px);
 }
-
 </style> 
