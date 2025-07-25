@@ -26,7 +26,7 @@
       <div class="trait-section" v-if="userInfo.user_personality_trait">
         <h3>Your Personality Trait</h3>
         <div class="trait-content">
-          <p>{{ userInfo.user_personality_trait }}</p>
+          <p v-html="formatPersonalityTrait(userInfo.user_personality_trait)"></p>
         </div>
       </div>
       
@@ -72,6 +72,27 @@ const getGenderText = (gender) => {
     case 3: return 'Other'  // 其他
     default: return 'Unknown' // 未知
   }
+}
+
+// 格式化性格特质文本 - 根据规则添加换行
+const formatPersonalityTrait = (text) => {
+  if (!text) return ''
+  
+  let formattedText = text
+  // 1. 冒号":"之后换行
+  formattedText = formattedText.replace(/：/g, '：<br/>')
+  formattedText = formattedText.replace(/:/g, ':<br/>')
+  
+  // 2. "-"之前换行  
+  formattedText = formattedText.replace(/-/g, '<br/>-')
+  
+  // 3. "***"之前换行
+  formattedText = formattedText.replace(/\*\*\*/g, '<br/>***')
+  
+  // 清理开头可能多余的<br/>
+  formattedText = formattedText.replace(/^<br\/>/, '')
+  
+  return formattedText
 }
 
 // 加载用户信息
@@ -122,6 +143,7 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: stretch;
   padding: 1rem;
+  padding-bottom: 100px; /* 为底部导航栏预留空间 */
 }
 
 
@@ -210,6 +232,9 @@ onUnmounted(() => {
   border-radius: 8px;
   font-family: 'Anonymous Pro', monospace;
   text-decoration: underline;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 
 /* 统计信息区域 */
