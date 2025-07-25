@@ -24,7 +24,7 @@
       </div>
       
       <div class="trait-section" v-if="userInfo.user_personality_trait">
-        <h3>Your personality trait</h3>
+        <h3>Your Personality Trait</h3>
         <div class="trait-content">
           <p>{{ userInfo.user_personality_trait }}</p>
         </div>
@@ -132,6 +132,7 @@ onUnmounted(() => {
   padding: 2rem;
   font-size: 1.1rem;
   color: #666;
+  font-family: 'Anonymous Pro', monospace;
 }
 
 /* 错误状态 */
@@ -139,6 +140,7 @@ onUnmounted(() => {
   text-align: center;
   padding: 2rem;
   color: #e74c3c;
+  font-family: 'Anonymous Pro', monospace;
 }
 
 .retry-btn {
@@ -150,6 +152,7 @@ onUnmounted(() => {
   cursor: pointer;
   margin-top: 1rem;
   font-size: 1rem;
+  font-family: 'Anonymous Pro', monospace;
 }
 
 .retry-btn:hover {
@@ -166,7 +169,7 @@ onUnmounted(() => {
 .profile-info {
   text-align: center;
   align-self: center;
-  background: #f8f9fa;
+  background: #F8F8F8;
   padding: 1.5rem;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -176,13 +179,14 @@ onUnmounted(() => {
   margin: 0.5rem 0;
   font-size: 1.1rem;
   font-weight: 500;
+  font-family: 'Anonymous Pro', monospace;
 }
 
 /* 性格特质区域 */
 .trait-section {
   width: 100%;
   max-width: 100%;
-  background: #f8f8f8;
+  background: #F8F8F8;
   border-radius: 16px;
   padding: 1.5rem;
   margin-top: 1rem;
@@ -193,22 +197,24 @@ onUnmounted(() => {
   color: #333;
   text-align: center;
   font-size: 1.3rem;
+  font-family: 'Anonymous Pro', monospace;
 }
 
 .trait-content p {
   line-height: 1.6;
   color: #555;
-  text-align: left;
+  text-align: justify;
   margin: 0;
   padding: 1rem;
-  background: white;
+  background: #DDEBE3;
   border-radius: 8px;
-  border-left: 4px solid #3498db;
+  font-family: 'Anonymous Pro', monospace;
+  text-decoration: underline;
 }
 
 /* 统计信息区域 */
 .stats-section {
-  background: #e8f4fd;
+  background: #F8F8F8;
   border-radius: 12px;
   padding: 1.5rem;
   margin-top: 1rem;
@@ -219,6 +225,7 @@ onUnmounted(() => {
   color: #2c3e50;
   text-align: center;
   font-size: 1.2rem;
+  font-family: 'Anonymous Pro', monospace;
 }
 
 .stat-item {
@@ -227,6 +234,7 @@ onUnmounted(() => {
   align-items: center;
   padding: 0.5rem 0;
   border-bottom: 1px solid rgba(52, 152, 219, 0.2);
+  font-family: 'Anonymous Pro', monospace;
 }
 
 .stat-item:last-child {
