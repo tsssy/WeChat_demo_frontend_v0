@@ -122,7 +122,7 @@ const getRetryMessage = () => {
 }
 
 // WebSocket配置 - 使用统一配置管理
-import { getMatchWebSocketUrl, getMessageWebSocketUrl } from '@/utils/config.js'
+import { getMatchWebSocketUrl, getMessageWebSocketUrl, DEBUG_CONFIG } from '@/utils/config.js'
 
 // 加载当前用户名称
 const loadCurrentUserName = async () => {
@@ -145,6 +145,12 @@ const loadCurrentUserName = async () => {
 
 // 检查用户匹配状态并决定导航
 const checkUserMatchStatus = async () => {
+  // Debug模式：如果开启get_new_match，跳过现有匹配检查
+  if (DEBUG_CONFIG.get_new_match) {
+    debugLog.log('🔧 Debug模式：get_new_match=true，强制返回无匹配状态')
+    return false
+  }
+
   if (!userStore.user_id) {
     debugLog.error('用户未初始化，无法检查匹配状态')
     return false

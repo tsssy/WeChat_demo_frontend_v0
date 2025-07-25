@@ -1,10 +1,5 @@
 <template>
   <div class="page-container why-him-page">
-    <!-- User name as top navigation -->
-    <div class="top-nav">
-      <h3 class="user-name">{{ targetUserDisplayName }}</h3>
-    </div>
-    
     <!-- Loading state -->
     <div v-if="isLoading" class="loading-state">
       <div class="loading-spinner"></div>
@@ -20,15 +15,25 @@
     
     <!-- Content when loaded -->
     <div v-else class="match-content">
+      <!-- 新的标题 -->
+      <h1 class="cupid-title">🎉 Cupid find your match！</h1>
+      
+      <!-- 卡片placeholder -->
+      <div class="match-card-placeholder">
+        <p>Match Card Placeholder</p>
+      </div>
+      
       <!-- Dynamic gender-based heading -->
-      <h2>Why {{ targetGenderPronoun }}?</h2>
+      <h2 class="why-title">Why {{ targetGenderPronoun }}?</h2>
       
-      <p>{{ matchDescription || defaultDescription }}</p>
+      <!-- 理由文字 -->
+      <p class="match-reason">{{ matchDescription || defaultDescription }}</p>
       
+      <!-- Chat Now按钮 -->
       <button class="chat-now-btn" @click="goToChatroom">Chat Now</button>
       
-      <!-- Other matches link below the button -->
-      <a href="#" class="other-matches-link" @click.prevent="goToMatch">Check out other matches</a>
+      <!-- Other Matches按钮 -->
+      <button class="other-matches-btn" @click="goToMatch">Check out other matches</button>
     </div>
     
     <!-- Toast component -->
@@ -231,35 +236,6 @@ onMounted(() => {
   padding: 0;
 }
 
-.top-nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid #eee;
-  padding: 1rem;
-  z-index: 100;
-}
-
-@media (min-width: 768px) {
-  .top-nav {
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    width: 430px;
-  }
-}
-
-.user-name {
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: #222;
-  margin: 0;
-  text-align: center;
-}
-
 .loading-state, .error-state {
   display: flex;
   flex-direction: column;
@@ -267,7 +243,6 @@ onMounted(() => {
   justify-content: center;
   gap: 1rem;
   flex: 1;
-  margin-top: 4rem;
 }
 
 .match-content {
@@ -277,8 +252,8 @@ onMounted(() => {
   flex: 1;
   justify-content: center;
   max-width: 100%;
-  margin-top: 4rem;
   padding: 2rem 1rem;
+  gap: 1.5rem;
 }
 
 .loading-spinner {
@@ -319,63 +294,141 @@ onMounted(() => {
   background: #0056b3;
 }
 
-.match-content h2 {
-  font-size: 1.8rem;
-  margin-bottom: 1rem;
-  color: #333;
-}
-
-.match-content p {
-  width: 100%;
-  line-height: 1.5;
-  margin-bottom: 2rem;
+/* 新的标题样式 */
+.cupid-title {
+  color: #FE6A80;
   text-align: center;
-  font-size: 1rem;
+  font-family: "Anonymous Pro", monospace;
+  font-style: normal;
+  line-height: normal;
+  font-size: 1.5rem;
+  margin: 0;
 }
 
 @media (min-width: 768px) {
-  .match-content p {
-    max-width: 350px;
+  .cupid-title {
+    font-size: 2rem;
+  }
+}
+
+/* 卡片placeholder样式 */
+.match-card-placeholder {
+  width: 100%;
+  max-width: 300px;
+  height: 200px;
+  background: #f5f5f5;
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.match-card-placeholder p {
+  color: #999;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Why him/her标题样式 */
+.why-title {
+  color: #616161;
+  text-align: center;
+  font-family: "Crimson Text", serif;
+  font-style: normal;
+  line-height: normal;
+  font-size: 1.6rem;
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .why-title {
+    font-size: 2rem;
+  }
+}
+
+/* 理由文字样式 */
+.match-reason {
+  color: #000;
+  text-align: center;
+  font-family: "Source Serif Pro", serif;
+  font-style: normal;
+  line-height: 1.5;
+  font-size: 1rem;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 1rem;
+}
+
+@media (min-width: 768px) {
+  .match-reason {
+    max-width: 400px;
     font-size: 1.1rem;
   }
 }
 
+/* Chat Now按钮样式 */
 .chat-now-btn {
-  background: #ff6b81;
-  color: #fff;
-  font-size: 1.2rem;
-  font-weight: bold;
+  width: 70%;
+  height: 60px;
+  border-radius: 30px;
+  background: #FE6A80;
   border: none;
-  border-radius: 24px;
-  padding: 16px 40px;
   cursor: pointer;
   transition: all 0.3s;
-  box-shadow: 0 4px 8px rgba(255, 107, 129, 0.3);
-  margin-bottom: 1.5rem;
+  
+  color: #FFF;
+  text-align: center;
+  font-family: "Anonymous Pro", monospace;
+  font-style: normal;
+  line-height: normal;
+  font-size: 1rem;
+  font-weight: bold;
 }
 
 .chat-now-btn:hover {
-  background: #ff5a73;
+  background: #fe5a73;
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(255, 107, 129, 0.4);
 }
 
 @media (min-width: 768px) {
   .chat-now-btn {
-    font-size: 1.3rem;
-    padding: 18px 48px;
+    height: 80px;
+    border-radius: 40px;
+    font-size: 1.2rem;
   }
 }
 
-.other-matches-link {
-  color: #007bff;
-  text-decoration: underline;
-  font-size: 0.9rem;
-  transition: color 0.3s;
-  margin-top: 0.5rem;
+/* Other Matches按钮样式 */
+.other-matches-btn {
+  width: 70%;
+  height: 60px;
+  border-radius: 30px;
+  background: #C0DFCF;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  
+  color: #FFF;
+  text-align: center;
+  font-family: "Anonymous Pro", monospace;
+  font-style: normal;
+  line-height: normal;
+  font-size: 1rem;
+  font-weight: bold;
 }
 
-.other-matches-link:hover {
-  color: #0056b3;
+.other-matches-btn:hover {
+  background: #b0cfbf;
+  transform: translateY(-2px);
+}
+
+@media (min-width: 768px) {
+  .other-matches-btn {
+    height: 80px;
+    border-radius: 40px;
+    font-size: 1.2rem;
+  }
 }
 </style> 
