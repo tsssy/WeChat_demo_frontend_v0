@@ -18,7 +18,7 @@
     <!-- WebSocket 连接中状态 -->
     <div v-if="wsConnecting" class="loading-state">
       <div class="loading-spinner"></div>
-      <p>正在连接聊天服务器...</p>
+      <p>Connecting to chat server...</p>
     </div>
     <!-- Loading state -->
     <div v-else-if="isLoading" class="loading-state">
