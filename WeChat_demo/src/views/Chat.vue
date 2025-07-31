@@ -77,7 +77,7 @@
 import { ref, onMounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { aiAPI } from '@/services/api'
+import { aiAPI, userAPI } from '@/services/api'
 
 // 路由和状态管理
 const router = useRouter()
@@ -180,6 +180,31 @@ const sendInitialMessage = async () => {
   await sendAIMessage(initialMessage, false) // false表示不添加到界面（因为AI会自动处理）
 }
 
+// 保存完整总结到后端
+const saveSummaryToBackend = async (fullSummaryContent) => {
+  if (!currentUser?.user_id || !fullSummaryContent) return
+  
+  try {
+    console.log('💾 开始保存完整总结到edit_summary，用户ID:', currentUser.user_id)
+    console.log('💾 保存内容:', fullSummaryContent)
+    
+    const response = await userAPI.editSummary({
+      user_id: currentUser.user_id,
+      summary: fullSummaryContent
+    })
+    
+    if (response.success) {
+      console.log('✅ 完整总结保存到edit_summary成功')
+    } else {
+      console.error('❌ 完整总结保存失败:', response)
+      showError('总结保存失败，但对话已完成')
+    }
+  } catch (error) {
+    console.error('❌ 保存完整总结异常:', error)
+    showError('总结保存失败，但对话已完成')
+  }
+}
+
 // 发送AI消息
 const sendAIMessage = async (message, addToHistory = true) => {
   if (!currentUser?.user_id) return
@@ -222,7 +247,24 @@ const sendAIMessage = async (message, addToHistory = true) => {
       // 检查是否有总结
       if (response.summary && response.summary.trim()) {
         console.log('📋 收到对话总结:', response.summary)
-        summaryText.value = response.summary
+        
+        // 添加总结消息作为第二条AI消息
+        const summaryMessage = {
+          content: response.summary,
+          timestamp: new Date().toISOString(),
+          senderId: 999, // AI用户ID
+          displayName: 'AI Assistant',
+          isUser: false
+        }
+        chatHistory.value.push(summaryMessage)
+        
+        // 调用edit_summary接口，保存完整的总结内容（response + summary）
+        const fullSummaryContent = response.response + '\n\n' + response.summary
+        await saveSummaryToBackend(fullSummaryContent)
+        
+        // 显示总结弹窗（显示完整内容：关键问题摘要 + 提问问题包）
+        const fullSummaryForModal = response.response + '\n\n' + response.summary
+        summaryText.value = fullSummaryForModal
         showSummary.value = true
       }
       
@@ -323,6 +365,26 @@ onMounted(() => {
 .message {
   max-width: 80%;
   margin-bottom: 5px;
+  width: fit-content;
+  min-width: 60px;
+}
+
+/* 针对不同长度消息的优化 */
+.message-content {
+  min-width: 40px;
+  width: auto;
+}
+
+/* 短消息优化 */
+.message-content:has-text-length-short {
+  min-width: 60px;
+}
+
+/* 长消息优化 */
+@media (max-width: 768px) {
+  .message {
+    max-width: 85%;
+  }
 }
 
 .ai-message {
@@ -338,6 +400,8 @@ onMounted(() => {
   line-height: 1.4;
   word-wrap: break-word;
   white-space: pre-wrap;
+  display: inline-block;
+  max-width: 100%;
 }
 
 .user-message {
@@ -354,6 +418,8 @@ onMounted(() => {
   line-height: 1.4;
   word-wrap: break-word;
   white-space: pre-wrap;
+  display: inline-block;
+  max-width: 100%;
 }
 
 .message-time {

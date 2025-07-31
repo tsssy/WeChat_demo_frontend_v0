@@ -67,6 +67,17 @@ export const userAPI = {
         age: userData.age
       })
     })
+  },
+  
+  // 编辑用户总结
+  async editSummary(userData) {
+    return await apiRequest('/v1/UserManagement/edit_summary', {
+      method: 'POST',
+      body: JSON.stringify({
+        user_id: userData.user_id,
+        summary: userData.summary
+      })
+    })
   }
 }
 
