@@ -406,7 +406,9 @@ onMounted(() => {
 
 .user-message {
   margin-left: auto;
-  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
 .user-message .message-content {
@@ -420,6 +422,7 @@ onMounted(() => {
   white-space: pre-wrap;
   display: inline-block;
   max-width: 100%;
+  text-align: left;
 }
 
 .message-time {
@@ -431,6 +434,7 @@ onMounted(() => {
 
 .user-message .message-time {
   text-align: right;
+  align-self: flex-end;
 }
 
 .typing {
