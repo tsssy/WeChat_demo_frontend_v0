@@ -59,11 +59,13 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { userAPI } from '@/services/api'
+import { useCardGameStore } from '@/stores/cardGame'
+import { userAPI, cardGameAPI } from '@/services/api'
 
 // 路由和状态管理
 const router = useRouter()
 const userStore = useUserStore()
+const cardGameStore = useCardGameStore()
 
 // 响应式数据
 const selectedGender = ref(null) // 1: 女性, 2: 男性
@@ -78,11 +80,42 @@ const canProceed = computed(() => {
 // 选择性别
 const selectGender = (gender) => {
   selectedGender.value = gender
+  console.log('选择性别:', gender === 1 ? '女性' : '男性', 'selectedGender.value:', selectedGender.value)
 }
 
 // 生成随机用户ID
 const generateUserId = () => {
   return Math.floor(Math.random() * 1000000000)
+}
+
+// 启动抽卡游戏
+const startCardGame = async (userId) => {
+  try {
+    console.log('🎮 启动抽卡游戏，用户ID:', userId)
+    
+    const response = await cardGameAPI.startTest(userId)
+    console.log('🎮 抽卡游戏API完整响应:', response)
+    
+    if (response.status === 'success') {
+      console.log('🎮 响应数据:', response.data)
+      
+      // 将游戏数据保存到store
+      cardGameStore.setGameData({
+        sessionId: response.data.session_id,
+        currentQuestion: response.data.first_question, // 修复：后端返回的是 first_question
+        progress: response.data.progress
+      })
+      
+      console.log('✅ 抽卡游戏启动成功，跳转到测试页面')
+      router.push('/card-game-test')
+    } else {
+      console.error('❌ API返回失败状态:', response)
+      throw new Error(response.error || '启动游戏失败')
+    }
+  } catch (error) {
+    console.error('❌ 启动抽卡游戏失败:', error)
+    alert('游戏启动失败，请重试: ' + error.message)
+  }
 }
 
 // 处理Use AI按钮点击
@@ -141,8 +174,16 @@ const handleUseAI = async () => {
       age: age
     })
     
-    // 跳转到下一个页面
-    router.push('/chat')
+    // 根据性别跳转不同页面
+    if (selectedGender.value === 1) {
+      // 女性：跳转AI聊天页面
+      console.log('👩 女性用户，跳转AI聊天页面')
+      router.push('/chat')
+    } else if (selectedGender.value === 2) {
+      // 男性：启动抽卡游戏并跳转到测试页面
+      console.log('👨 男性用户，启动抽卡游戏')
+      await startCardGame(createUserResponse.user_id)
+    }
     
   } catch (error) {
     console.error('处理失败:', error)

@@ -105,8 +105,55 @@ export const aiAPI = {
   }
 }
 
+// 抽卡游戏API方法
+export const cardGameAPI = {
+  // 开始性格测试
+  async startTest(userId) {
+    return await apiRequest('/v1/CardGame/start', {
+      method: 'POST',
+      body: JSON.stringify({
+        user_id: userId
+      })
+    })
+  },
+  
+  // 提交答案
+  async submitAnswer(sessionId, questionId, selectedOption) {
+    return await apiRequest('/v1/CardGame/answer', {
+      method: 'POST',
+      body: JSON.stringify({
+        session_id: sessionId,
+        question_id: questionId,
+        selected_option: selectedOption
+      })
+    })
+  },
+  
+  // 获取测试结果
+  async getResult(sessionId) {
+    return await apiRequest(`/v1/CardGame/result/${sessionId}`, {
+      method: 'GET'
+    })
+  },
+  
+  // 获取测试历史
+  async getHistory(userId, page = 1, limit = 10) {
+    return await apiRequest(`/v1/CardGame/history/${userId}?page=${page}&limit=${limit}`, {
+      method: 'GET'
+    })
+  },
+  
+  // 获取系统统计
+  async getStats() {
+    return await apiRequest('/v1/CardGame/stats', {
+      method: 'GET'
+    })
+  }
+}
+
 // 导出API方法
 export default {
   userAPI,
-  aiAPI
+  aiAPI,
+  cardGameAPI
 } 

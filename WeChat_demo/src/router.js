@@ -11,6 +11,16 @@ const routes = [
     path: '/chat',
     name: 'Chat',
     component: () => import('./views/Chat.vue')
+  },
+  {
+    path: '/card-game-test',
+    name: 'CardGameTest',
+    component: () => import('./views/CardGameTest.vue')
+  },
+  {
+    path: '/card-game-result',
+    name: 'CardGameResult',
+    component: () => import('./views/CardGameResult.vue')
   }
 ]
 
