@@ -1,5 +1,6 @@
 // API服务配置
-const API_BASE_URL = '/api'
+// 设置API基础URL，保留 /api 路由前缀
+const API_BASE_URL = 'https://loveluretech.xyz/api'
 
 // 通用请求方法
 export const apiRequest = async (endpoint, options = {}) => {

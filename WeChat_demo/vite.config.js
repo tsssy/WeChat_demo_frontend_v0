@@ -4,7 +4,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
-// https://vite.dev/config/
+// Vite 配置文件
 export default defineConfig({
   plugins: [
     vue(),
@@ -16,12 +16,14 @@ export default defineConfig({
     },
   },
   server: {
+    // 开发环境代理配置
     proxy: {
       '/api': {
-        target: 'http://localhost:8001',
+        // 代理到生产环境API服务器
+        target: 'https://loveluretech.xyz',
         changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path
+        secure: true, // 启用 HTTPS
+        rewrite: (path) => path // 保持原有路径，包含 /api
       }
     }
   }
